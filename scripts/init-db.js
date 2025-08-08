@@ -94,6 +94,25 @@ function columnExists(table, column) {
         )
     `);
 
+    // Tabla de items de órdenes de compra
+    await runSafe(`
+        CREATE TABLE IF NOT EXISTS purchase_order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            product_id INTEGER,
+            product_name TEXT NOT NULL,
+            product_code TEXT,
+            description TEXT,
+            quantity DECIMAL(10,3) NOT NULL,
+            unit_price DECIMAL(10,2) NOT NULL,
+            total_price DECIMAL(10,2) NOT NULL,
+            unit_of_measure TEXT DEFAULT 'UN',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (order_id) REFERENCES purchase_orders (id) ON DELETE CASCADE,
+            FOREIGN KEY (product_id) REFERENCES supplier_products (id)
+        )
+    `);
+
     // Nueva tabla: centros de costos
     await runSafe(`
         CREATE TABLE IF NOT EXISTS cost_centers (
@@ -209,6 +228,75 @@ function columnExists(table, column) {
     });
 
     console.log('Datos de ejemplo verificados.');
+
+    // Agregar datos de ejemplo más completos
+    db.get(`SELECT COUNT(*) as c FROM suppliers`, (err, row) => {
+        const count = row ? row.c : 0;
+        if (count === 0) {
+            const sampleSuppliers = [
+                {
+                    name: 'TechCorp Solutions',
+                    contact_person: 'Juan Pérez',
+                    email: 'juan.perez@techcorp.cl',
+                    phone: '+56 2 2555 0100',
+                    address: 'Av. Providencia 1234',
+                    city: 'Santiago',
+                    country: 'Chile',
+                    tax_id: '96.123.456-7',
+                    payment_terms: '30 días'
+                },
+                {
+                    name: 'Oficina Total',
+                    contact_person: 'María González',
+                    email: 'ventas@oficinatotal.cl',
+                    phone: '+56 2 2888 9900',
+                    address: 'Las Condes 5678',
+                    city: 'Santiago',
+                    country: 'Chile',
+                    tax_id: '76.234.567-8',
+                    payment_terms: '15 días'
+                },
+                {
+                    name: 'Industrial Supply',
+                    contact_person: 'Carlos Rodriguez',
+                    email: 'carlos@indsupply.cl',
+                    phone: '+56 2 2333 4400',
+                    address: 'Parque Industrial Norte 100',
+                    city: 'Santiago',
+                    country: 'Chile',
+                    tax_id: '86.345.678-9',
+                    payment_terms: '45 días'
+                }
+            ];
+            
+            const stmt = db.prepare(`INSERT INTO suppliers (name, contact_person, email, phone, address, city, country, tax_id, payment_terms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+            sampleSuppliers.forEach(s => stmt.run(s.name, s.contact_person, s.email, s.phone, s.address, s.city, s.country, s.tax_id, s.payment_terms));
+            stmt.finalize();
+        }
+    });
+
+    // Agregar productos de ejemplo
+    db.get(`SELECT COUNT(*) as c FROM supplier_products`, (err, row) => {
+        const count = row ? row.c : 0;
+        if (count === 0) {
+            db.all(`SELECT id FROM suppliers`, (err, suppliers) => {
+                if (suppliers && suppliers.length > 0) {
+                    const sampleProducts = [
+                        { supplier_id: suppliers[0].id, product_name: 'Laptop Dell Inspiron 15', product_code: 'DELL-INS-15', description: 'Laptop para oficina con Windows 11', unit_price: 850000, currency: 'CLP', unit_of_measure: 'UN' },
+                        { supplier_id: suppliers[0].id, product_name: 'Monitor Samsung 24"', product_code: 'SAM-MON-24', description: 'Monitor LED 24 pulgadas Full HD', unit_price: 180000, currency: 'CLP', unit_of_measure: 'UN' },
+                        { supplier_id: suppliers[1].id, product_name: 'Silla Ejecutiva', product_code: 'SIL-EJEC-001', description: 'Silla ergonómica para ejecutivos', unit_price: 120000, currency: 'CLP', unit_of_measure: 'UN' },
+                        { supplier_id: suppliers[1].id, product_name: 'Escritorio Modular', product_code: 'ESC-MOD-120', description: 'Escritorio modular 120x60cm', unit_price: 95000, currency: 'CLP', unit_of_measure: 'UN' },
+                        { supplier_id: suppliers[2].id, product_name: 'Kit Herramientas', product_code: 'KIT-HER-001', description: 'Kit básico de herramientas para mantenimiento', unit_price: 45000, currency: 'CLP', unit_of_measure: 'KIT' },
+                        { supplier_id: suppliers[2].id, product_name: 'Lubricante Industrial', product_code: 'LUB-IND-5L', description: 'Lubricante sintético para maquinaria', unit_price: 25000, currency: 'CLP', unit_of_measure: 'LT' }
+                    ];
+                    
+                    const stmt = db.prepare(`INSERT INTO supplier_products (supplier_id, product_name, product_code, description, unit_price, currency, unit_of_measure) VALUES (?, ?, ?, ?, ?, ?, ?)`);
+                    sampleProducts.forEach(p => stmt.run(p.supplier_id, p.product_name, p.product_code, p.description, p.unit_price, p.currency, p.unit_of_measure));
+                    stmt.finalize();
+                }
+            });
+        }
+    });
 
     db.close((err) => {
         if (err) {

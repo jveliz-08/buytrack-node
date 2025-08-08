@@ -206,4 +206,289 @@ router.delete('/', (req, res) => {
     });
 });
 
+// Análisis de tendencias y proyecciones
+router.get('/trends', (req, res) => {
+    const { cost_center_id, months = 6 } = req.query;
+    
+    let sql = `
+        SELECT 
+            b.month,
+            b.cost_center_id,
+            cc.name as center_name,
+            cc.code as center_code,
+            b.currency,
+            b.amount as budget,
+            COALESCE(spending.total_spent, 0) as spent,
+            COALESCE(spending.orders_count, 0) as orders_count,
+            CASE 
+                WHEN b.amount > 0 
+                THEN (COALESCE(spending.total_spent, 0) / b.amount) * 100 
+                ELSE 0 
+            END as utilization
+        FROM budgets b
+        JOIN cost_centers cc ON b.cost_center_id = cc.id
+        LEFT JOIN (
+            SELECT 
+                cost_center_id,
+                strftime('%Y-%m', COALESCE(order_date, created_at)) as period,
+                SUM(total_amount) as total_spent,
+                COUNT(*) as orders_count
+            FROM purchase_orders 
+            GROUP BY cost_center_id, period
+        ) spending ON b.cost_center_id = spending.cost_center_id AND b.month = spending.period
+        WHERE 1=1
+    `;
+    
+    const params = [];
+    
+    if (cost_center_id) {
+        sql += ' AND b.cost_center_id = ?';
+        params.push(cost_center_id);
+    }
+    
+    sql += ` ORDER BY b.month DESC LIMIT ?`;
+    params.push(parseInt(months));
+    
+    db.all(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        
+        // Calcular tendencias
+        const trends = {
+            budget_trend: calculateTrend(rows.map(r => r.budget)),
+            spending_trend: calculateTrend(rows.map(r => r.spent)),
+            utilization_trend: calculateTrend(rows.map(r => r.utilization))
+        };
+        
+        // Proyección simple para próximo mes
+        const avgSpending = rows.reduce((sum, r) => sum + r.spent, 0) / (rows.length || 1);
+        const lastBudget = rows.length > 0 ? rows[0].budget : 0;
+        const projection = {
+            estimated_spending: avgSpending,
+            estimated_utilization: lastBudget > 0 ? (avgSpending / lastBudget) * 100 : 0,
+            risk_level: avgSpending > lastBudget ? 'high' : avgSpending > lastBudget * 0.9 ? 'medium' : 'low'
+        };
+        
+        res.json({
+            success: true,
+            data: {
+                historical: rows.reverse(), // Ordenar cronológicamente
+                trends,
+                projection
+            }
+        });
+    });
+});
+
+// Función helper para calcular tendencias
+function calculateTrend(values) {
+    if (values.length < 2) return 0;
+    const recent = values.slice(0, Math.ceil(values.length / 2));
+    const older = values.slice(Math.ceil(values.length / 2));
+    const recentAvg = recent.reduce((sum, v) => sum + v, 0) / recent.length;
+    const olderAvg = older.reduce((sum, v) => sum + v, 0) / older.length;
+    return olderAvg === 0 ? 0 : ((recentAvg - olderAvg) / olderAvg) * 100;
+}
+
+// Exportar datos de presupuestos
+router.get('/export', (req, res) => {
+    const { format = 'csv', period } = req.query;
+    
+    let sql = `
+        SELECT 
+            cc.code as "Código Centro",
+            cc.name as "Nombre Centro",
+            cc.department as "Departamento",
+            b.month as "Período",
+            b.currency as "Moneda",
+            b.amount as "Presupuesto",
+            b.category as "Categoría",
+            b.priority as "Prioridad",
+            b.approver as "Aprobador",
+            COALESCE(spending.total_spent, 0) as "Gastado",
+            COALESCE(spending.orders_count, 0) as "Órdenes",
+            CASE 
+                WHEN b.amount > 0 
+                THEN ROUND((COALESCE(spending.total_spent, 0) / b.amount) * 100, 2)
+                ELSE 0 
+            END as "Utilización %",
+            (b.amount - COALESCE(spending.total_spent, 0)) as "Disponible"
+        FROM budgets b
+        JOIN cost_centers cc ON b.cost_center_id = cc.id
+        LEFT JOIN (
+            SELECT 
+                cost_center_id,
+                strftime('%Y-%m', COALESCE(order_date, created_at)) as period,
+                SUM(total_amount) as total_spent,
+                COUNT(*) as orders_count
+            FROM purchase_orders 
+            GROUP BY cost_center_id, period
+        ) spending ON b.cost_center_id = spending.cost_center_id AND b.month = spending.period
+    `;
+    
+    const params = [];
+    if (period) {
+        sql += ' WHERE b.month = ?';
+        params.push(period);
+    }
+    
+    sql += ' ORDER BY cc.name, b.month';
+    
+    db.all(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        
+        if (format === 'csv') {
+            const headers = Object.keys(rows[0] || {});
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => headers.map(h => `"${row[h] || ''}"`).join(','))
+            ].join('\n');
+            
+            res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+            res.setHeader('Content-Disposition', `attachment; filename=presupuestos_${period || 'todos'}.csv`);
+            res.send('\ufeff' + csvContent); // BOM para UTF-8
+        } else {
+            res.json({ success: true, data: rows });
+        }
+    });
+});
+
+// Importar presupuestos masivos
+router.post('/import', (req, res) => {
+    const { budgets } = req.body;
+    
+    if (!Array.isArray(budgets) || budgets.length === 0) {
+        return res.status(400).json({ success: false, error: 'Se requiere array de presupuestos' });
+    }
+    
+    // Validar estructura
+    const requiredFields = ['cost_center_id', 'month', 'amount'];
+    const invalidBudgets = budgets.filter(b => 
+        !requiredFields.every(field => b.hasOwnProperty(field))
+    );
+    
+    if (invalidBudgets.length > 0) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'Presupuestos inválidos encontrados',
+            details: invalidBudgets 
+        });
+    }
+    
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        
+        const stmt = db.prepare(`
+            INSERT OR REPLACE INTO budgets (
+                cost_center_id, month, currency, amount, category, description, 
+                priority, approver, warning_threshold, critical_threshold, 
+                overspend_limit, auto_adjust, rollover_unused, require_approval, email_alerts
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        
+        let processed = 0;
+        let errors = [];
+        
+        budgets.forEach((budget, index) => {
+            const params = [
+                budget.cost_center_id,
+                budget.month,
+                budget.currency || 'CLP',
+                Number(budget.amount) || 0,
+                budget.category,
+                budget.description,
+                budget.priority,
+                budget.approver,
+                budget.warning_threshold != null ? parseInt(budget.warning_threshold) : null,
+                budget.critical_threshold != null ? parseInt(budget.critical_threshold) : null,
+                budget.overspend_limit != null ? parseInt(budget.overspend_limit) : null,
+                toIntBool(budget.auto_adjust) ?? 0,
+                toIntBool(budget.rollover_unused) ?? 0,
+                toIntBool(budget.require_approval) ?? 0,
+                toIntBool(budget.email_alerts) ?? 0
+            ];
+            
+            stmt.run(params, function(err) {
+                if (err) {
+                    errors.push({ index, error: err.message });
+                } else {
+                    processed++;
+                }
+            });
+        });
+        
+        stmt.finalize((err) => {
+            if (err || errors.length > 0) {
+                db.run('ROLLBACK');
+                res.status(500).json({ 
+                    success: false, 
+                    error: 'Error en importación', 
+                    processed, 
+                    errors 
+                });
+            } else {
+                db.run('COMMIT');
+                res.json({ 
+                    success: true, 
+                    message: `${processed} presupuestos importados exitosamente`,
+                    processed 
+                });
+            }
+        });
+    });
+});
+
+// Actualización masiva de presupuestos
+router.put('/bulk-update', (req, res) => {
+    const { budget_ids, updates } = req.body;
+    
+    if (!Array.isArray(budget_ids) || budget_ids.length === 0) {
+        return res.status(400).json({ success: false, error: 'Se requiere array de IDs' });
+    }
+    
+    if (!updates || Object.keys(updates).length === 0) {
+        return res.status(400).json({ success: false, error: 'Se requieren campos a actualizar' });
+    }
+    
+    // Construir query dinámicamente
+    const allowedFields = [
+        'amount', 'category', 'priority', 'approver', 'warning_threshold',
+        'critical_threshold', 'overspend_limit', 'auto_adjust', 'rollover_unused',
+        'require_approval', 'email_alerts'
+    ];
+    
+    const setClause = [];
+    const params = [];
+    
+    Object.entries(updates).forEach(([field, value]) => {
+        if (allowedFields.includes(field)) {
+            setClause.push(`${field} = ?`);
+            if (['auto_adjust', 'rollover_unused', 'require_approval', 'email_alerts'].includes(field)) {
+                params.push(toIntBool(value));
+            } else {
+                params.push(value);
+            }
+        }
+    });
+    
+    if (setClause.length === 0) {
+        return res.status(400).json({ success: false, error: 'No hay campos válidos para actualizar' });
+    }
+    
+    const placeholders = budget_ids.map(() => '?').join(',');
+    const sql = `
+        UPDATE budgets 
+        SET ${setClause.join(', ')}, updated_at = CURRENT_TIMESTAMP 
+        WHERE id IN (${placeholders})
+    `;
+    
+    db.run(sql, [...params, ...budget_ids], function(err) {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        res.json({ 
+            success: true, 
+            message: `${this.changes} presupuestos actualizados`,
+            updated: this.changes 
+        });
+    });
+});
+
 module.exports = router;

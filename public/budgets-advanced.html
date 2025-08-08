@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Avanzada de Presupuestos - BuyTrack Pro</title>
+    <title>Gestión de Presupuestos</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/advanced-modules.css">
@@ -17,7 +16,7 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fas fa-building"></i>
-                    <h1>Sistema de Compras Pro</h1>
+                    <h1>Sistema de Compras</h1>
                 </div>
                 <nav class="nav">
                     <a href="/" class="nav-link">
@@ -50,7 +49,7 @@
         <section class="advanced-page-header">
             <div class="page-header-content">
                 <div class="page-title-section">
-                    <h1><i class="fas fa-coins"></i> Gestión Estratégica de Presupuestos</h1>
+                    <h1><i class="fas fa-coins"></i> Gestión de Presupuestos</h1>
                     <p class="page-subtitle">Control integral de presupuestos con análisis predictivo y optimización de recursos</p>
                     <div class="breadcrumb">
                         <span>Sistema</span> <i class="fas fa-chevron-right"></i> 
@@ -78,7 +77,7 @@
                             <i class="fas fa-edit"></i>
                             <span>Actualización Masiva</span>
                         </button>
-                        <button class="btn-primary-large" onclick="openCreateBudgetModal()">
+                        <button id="btn-new-budget" class="btn-primary-large" onclick="openCreateBudgetModal()">
                             <i class="fas fa-plus"></i>
                             <span>Nuevo Presupuesto</span>
                         </button>
@@ -373,11 +372,13 @@
                                         <option value="">Seleccionar centro...</option>
                                         <!-- Se llena dinámicamente -->
                                     </select>
+                                    <small class="form-error" id="err-cost-center" style="display:none">Seleccione un centro</small>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="budget-period">Período *</label>
                                     <input type="month" id="budget-period" required>
+                                    <small class="form-error" id="err-period" style="display:none">Seleccione un período</small>
                                 </div>
                                 
                                 <div class="form-group">
@@ -390,6 +391,7 @@
                                             <option value="UF">UF</option>
                                         </select>
                                     </div>
+                                    <small class="form-error" id="err-amount" style="display:none">Ingrese un monto válido</small>
                                 </div>
                                 
                                 <div class="form-group">
@@ -570,8 +572,12 @@
         </div>
     </div>
 
+    <!-- Hidden input for Import -->
+    <input type="file" id="import-file" accept=".csv,.json" style="display:none" />
+
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
+    <!-- Reemplazo: usar bundle local para evitar bloqueo del CDN -->
+    <script src="/vendor/chartjs/chart.min.js"></script>
     <script src="js/budgets-advanced.js"></script>
 </body>
 </html>

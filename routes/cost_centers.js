@@ -123,4 +123,135 @@ router.get('/usage', (req, res) => {
     });
 });
 
+// Estadísticas y métricas de centros de costo
+router.get('/metrics', (req, res) => {
+    const { period = new Date().toISOString().substr(0, 7) } = req.query;
+    
+    const metricsSql = `
+        SELECT 
+            cc.id,
+            cc.code,
+            cc.name,
+            cc.is_active,
+            cc.type,
+            cc.department,
+            cc.currency,
+            COALESCE(b.amount, 0) as budget_amount,
+            COALESCE(spending.total_spent, 0) as total_spent,
+            COALESCE(spending.orders_count, 0) as orders_count,
+            CASE 
+                WHEN COALESCE(b.amount, 0) > 0 
+                THEN (COALESCE(spending.total_spent, 0) / b.amount) * 100 
+                ELSE 0 
+            END as utilization_percentage,
+            COALESCE(b.amount, 0) - COALESCE(spending.total_spent, 0) as remaining_budget
+        FROM cost_centers cc
+        LEFT JOIN budgets b ON cc.id = b.cost_center_id AND b.month = ?
+        LEFT JOIN (
+            SELECT 
+                cost_center_id,
+                SUM(total_amount) as total_spent,
+                COUNT(*) as orders_count
+            FROM purchase_orders 
+            WHERE strftime('%Y-%m', COALESCE(order_date, created_at)) = ?
+            GROUP BY cost_center_id
+        ) spending ON cc.id = spending.cost_center_id
+        ORDER BY cc.is_active DESC, cc.name ASC
+    `;
+    
+    db.all(metricsSql, [period, period], (err, rows) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        
+        // Calcular métricas globales
+        const totalCenters = rows.length;
+        const activeCenters = rows.filter(r => r.is_active).length;
+        const totalBudget = rows.reduce((sum, r) => sum + (r.budget_amount || 0), 0);
+        const totalSpent = rows.reduce((sum, r) => sum + (r.total_spent || 0), 0);
+        const avgUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+        const overbudgetCenters = rows.filter(r => r.utilization_percentage > 100).length;
+        
+        res.json({
+            success: true,
+            data: {
+                period,
+                metrics: {
+                    totalCenters,
+                    activeCenters,
+                    totalBudget,
+                    totalSpent,
+                    avgUtilization,
+                    overbudgetCenters,
+                    available: totalBudget - totalSpent
+                },
+                centers: rows
+            }
+        });
+    });
+});
+
+// Comparación de rendimiento entre períodos
+router.get('/performance-comparison', (req, res) => {
+    const { periods } = req.query;
+    if (!periods) {
+        return res.status(400).json({ success: false, error: 'Se requiere parámetro periods (comma-separated)' });
+    }
+    
+    const periodList = periods.split(',').map(p => p.trim());
+    const placeholders = periodList.map(() => '?').join(',');
+    
+    const comparisonSql = `
+        SELECT 
+            b.month as period,
+            cc.code as center_code,
+            cc.name as center_name,
+            COALESCE(b.amount, 0) as budget,
+            COALESCE(spending.total_spent, 0) as spent,
+            COALESCE(spending.orders_count, 0) as orders_count
+        FROM budgets b
+        JOIN cost_centers cc ON b.cost_center_id = cc.id
+        LEFT JOIN (
+            SELECT 
+                cost_center_id,
+                strftime('%Y-%m', COALESCE(order_date, created_at)) as period,
+                SUM(total_amount) as total_spent,
+                COUNT(*) as orders_count
+            FROM purchase_orders 
+            WHERE strftime('%Y-%m', COALESCE(order_date, created_at)) IN (${placeholders})
+            GROUP BY cost_center_id, period
+        ) spending ON cc.id = spending.cost_center_id AND b.month = spending.period
+        WHERE b.month IN (${placeholders})
+        ORDER BY cc.name, b.month
+    `;
+    
+    db.all(comparisonSql, [...periodList, ...periodList], (err, rows) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        
+        // Agrupar por centro
+        const groupedByCenter = rows.reduce((acc, row) => {
+            if (!acc[row.center_code]) {
+                acc[row.center_code] = {
+                    center_code: row.center_code,
+                    center_name: row.center_name,
+                    periods: {}
+                };
+            }
+            acc[row.center_code].periods[row.period] = {
+                budget: row.budget,
+                spent: row.spent,
+                utilization: row.budget > 0 ? (row.spent / row.budget) * 100 : 0,
+                orders_count: row.orders_count
+            };
+            return acc;
+        }, {});
+        
+        res.json({
+            success: true,
+            data: {
+                periods: periodList,
+                centers: Object.values(groupedByCenter)
+            }
+        });
+    });
+});
+
 module.exports = router;

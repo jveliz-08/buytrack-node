@@ -88,7 +88,7 @@ class CostCentersAdvanced {
 
             const centers = Array.isArray(centersJson) ? centersJson : (centersJson.data || centersJson.centers || []);
             const budgets = Array.isArray(budgetsJson) ? budgetsJson : (budgetsJson.data || budgetsJson.budgets || []);
-            const orders = Array.isArray(ordersJson) ? ordersJson : (ordersJson.orders || []);
+            const orders = Array.isArray(ordersJson) ? ordersJson : (ordersJson.data || ordersJson.orders || []);
 
             const currentMonth = new Date().toISOString().substr(0, 7);
 
@@ -167,7 +167,12 @@ class CostCentersAdvanced {
     }
 
     initializeCharts() {
-        const ctx = document.getElementById('utilizationChart').getContext('2d');
+        const canvas = document.getElementById('utilizationChart');
+        if (!canvas || typeof Chart === 'undefined') {
+            console.warn('Chart.js no disponible o canvas no encontrado, omitiendo inicialización de gráficos');
+            return;
+        }
+        const ctx = canvas.getContext('2d');
         
         this.charts.utilization = new Chart(ctx, {
             type: 'doughnut',
@@ -400,28 +405,28 @@ class CostCentersAdvanced {
                 </td>
                 <td>
                     <div class="action-buttons">
-                        <button class="btn-icon" onclick="costCenters.viewDetails(${center.id})" 
+                        <button class="btn-icon" onclick="window.costCenters.viewDetails(${center.id})" 
                                 title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn-icon" onclick="costCenters.editCenter(${center.id})" 
+                        <button class="btn-icon" onclick="window.costCenters.editCenter(${center.id})" 
                                 title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-icon" onclick="costCenters.toggleStatus(${center.id})" 
+                        <button class="btn-icon" onclick="window.costCenters.toggleStatus(${center.id})" 
                                 title="${center.is_active ? 'Desactivar' : 'Activar'}">
                             <i class="fas fa-${center.is_active ? 'pause' : 'play'}"></i>
                         </button>
                         <div class="dropdown">
-                            <button class="btn-icon dropdown-toggle">
+                            <button class="btn-icon dropdown-toggle" onclick="event.stopPropagation(); this.closest('.dropdown').classList.toggle('active')">
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <div class="dropdown-menu">
-                                <a href="#" onclick="costCenters.viewBudgets && costCenters.viewBudgets(${center.id})">Ver Presupuestos</a>
-                                <a href="#" onclick="costCenters.viewOrders && costCenters.viewOrders(${center.id})">Ver Órdenes</a>
-                                <a href="#" onclick="costCenters.exportData && costCenters.exportData(${center.id})">Exportar Datos</a>
+                                <a href="#" onclick="event.preventDefault(); window.costCenters.viewBudgets && window.costCenters.viewBudgets(${center.id})">Ver Presupuestos</a>
+                                <a href="#" onclick="event.preventDefault(); window.costCenters.viewOrders && window.costCenters.viewOrders(${center.id})">Ver Órdenes</a>
+                                <a href="#" onclick="event.preventDefault(); window.costCenters.exportData && window.costCenters.exportData(${center.id})">Exportar Datos</a>
                                 <hr>
-                                <a href="#" onclick="costCenters.deleteCenter(${center.id})" class="text-danger">${center.is_active ? 'Desactivar' : 'Activar'}</a>
+                                <a href="#" onclick="event.preventDefault(); window.costCenters.deleteCenter(${center.id})" class="text-danger">${center.is_active ? 'Desactivar' : 'Activar'}</a>
                             </div>
                         </div>
                     </div>
@@ -698,10 +703,10 @@ class CostCentersAdvanced {
                         ${this.getStatusLabel(center.status)}
                     </span>
                     <div class="card-actions">
-                        <button onclick="costCenters.viewDetails(${center.id})" title="Ver detalles">
+                        <button onclick="window.costCenters.viewDetails(${center.id})" title="Ver detalles">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button onclick="costCenters.editCenter(${center.id})" title="Editar">
+                        <button onclick="window.costCenters.editCenter(${center.id})" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
                     </div>
@@ -800,7 +805,9 @@ class CostCentersAdvanced {
 
     showLoading(show) {
         const overlay = document.getElementById('loadingOverlay');
-        overlay.style.display = show ? 'flex' : 'none';
+        if (overlay) {
+            overlay.style.display = show ? 'flex' : 'none';
+        }
     }
 
     showSuccess(message) {
@@ -812,15 +819,116 @@ class CostCentersAdvanced {
     }
 
     showNotification(message, type) {
-        // Simple fallback notification
-        console.log(`${type.toUpperCase()}: ${message}`);
+        // Crear notificación toast
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Agregar estilos si no existen
+        if (!document.getElementById('toast-styles')) {
+            const styles = document.createElement('style');
+            styles.id = 'toast-styles';
+            styles.textContent = `
+                .toast {
+                    position: fixed;
+                    top: 1rem;
+                    right: 1rem;
+                    padding: 1rem 1.5rem;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: 500;
+                    z-index: 10002;
+                    animation: slideIn 0.3s ease, slideOut 0.3s ease 2.7s;
+                }
+                .toast-success { background: #10b981; }
+                .toast-error { background: #ef4444; }
+                .toast-content { display: flex; align-items: center; gap: 0.5rem; }
+                @keyframes slideIn { from { transform: translateX(100%); } }
+                @keyframes slideOut { to { transform: translateX(100%); } }
+            `;
+            document.head.appendChild(styles);
+        }
+        
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 3000);
     }
 }
 
 // Initialize the advanced cost centers system
 let costCenters;
+
+// Define global functions immediately to avoid "function not defined" errors
+window.openCreateCenterModal = function() {
+    if (window.costCenters && typeof window.costCenters.openCreateCenterModal === 'function') {
+        try {
+            window.costCenters.openCreateCenterModal();
+            return;
+        } catch (e) {
+            console.warn('Fallback to DOM openCreateCenterModal due to error:', e);
+        }
+    }
+    // Fallback directo al DOM
+    try {
+        const titleEl = document.getElementById('modal-title');
+        if (titleEl) titleEl.textContent = 'Nuevo Centro de Costo';
+        const form = document.getElementById('costCenterForm');
+        if (form && typeof form.reset === 'function') form.reset();
+        const isActive = document.getElementById('is-active');
+        if (isActive) isActive.checked = true;
+        const modal = document.getElementById('costCenterModal');
+        if (modal) modal.classList.add('active');
+    } catch (err) {
+        console.error('No se pudo abrir el modal de Centro de Costo:', err);
+    }
+};
+
+window.refreshAll = function() {
+    if (window.costCenters) {
+        window.costCenters.refreshAll();
+    } else {
+        console.error('Cost Centers module not initialized yet');
+    }
+};
+
+window.exportReport = function() {
+    if (window.costCenters) {
+        window.costCenters.exportReport();
+    } else {
+        console.error('Cost Centers module not initialized yet');
+    }
+};
+
+window.printReport = function() {
+    window.print();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
-    costCenters = new CostCentersAdvanced();
+    try {
+        costCenters = new CostCentersAdvanced();
+        window.costCenters = costCenters; // Make it globally available
+        console.log('Cost Centers module initialized successfully');
+    } catch (error) {
+        console.error('Error initializing Cost Centers module:', error);
+    }
+    // Safety net: ensure New Center button opens modal even if inline handlers are blocked
+    const newCenterBtn = document.getElementById('btn-new-center') || document.querySelector('button.btn-primary-large[onclick*="openCreateCenterModal"]');
+    if (newCenterBtn) {
+        newCenterBtn.addEventListener('click', (e) => {
+            try { e.preventDefault(); e.stopPropagation(); } catch {}
+            if (typeof window.openCreateCenterModal === 'function') {
+                window.openCreateCenterModal();
+            }
+        });
+    }
 });
 
 // Utility functions for global access
@@ -830,26 +938,90 @@ function logout() {
     }
 }
 
-function openCreateCenterModal() {
-    costCenters.openCreateCenterModal();
-}
-
 function closeCostCenterModal() {
-    costCenters.closeCostCenterModal();
+    if (window.costCenters) {
+        window.costCenters.closeCostCenterModal();
+    }
+    // Fallback
+    const modal = document.getElementById('costCenterModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function applyAdvancedFilters() {
-    costCenters.applyFilters();
+    if (window.costCenters) {
+        window.costCenters.applyFilters();
+    }
 }
 
-function refreshAll() {
-    costCenters.refreshAll();
+// Global functions for modal management
+function closeCenterDetailsModal() {
+    document.getElementById('centerDetailsModal').classList.remove('active');
 }
 
-function exportReport() {
-    costCenters.exportReport();
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('active');
 }
 
-function printReport() {
-    window.print();
+function confirmAction(title, message, callback) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-btn').onclick = () => {
+        callback();
+        closeConfirmModal();
+    };
+    document.getElementById('confirmModal').classList.add('active');
 }
+
+// Enhanced error handling for API calls
+async function handleApiCall(apiCall, successMessage = null) {
+    try {
+        costCenters.showLoading(true);
+        const result = await apiCall();
+        if (successMessage) {
+            costCenters.showSuccess(successMessage);
+        }
+        return result;
+    } catch (error) {
+        console.error('API Error:', error);
+        costCenters.showError(error.message || 'Error en la operación');
+        throw error;
+    } finally {
+        costCenters.showLoading(false);
+    }
+}
+
+// Improved dropdown handling
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+            dropdown.classList.remove('active');
+        });
+    }
+});
+
+// Enhanced keyboard navigation
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        // Close any open modals
+        document.querySelectorAll('.advanced-modal.active').forEach(modal => {
+            modal.classList.remove('active');
+        });
+        
+        // Close any open dropdowns
+        document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+            dropdown.classList.remove('active');
+        });
+    }
+});
+
+// Auto-refresh data periodically
+setInterval(() => {
+    if (costCenters && !document.querySelector('.advanced-modal.active')) {
+        costCenters.loadCenters().then(() => {
+            costCenters.updateMetrics();
+            costCenters.renderTable();
+        }).catch(console.error);
+    }
+}, 300000); // Refresh every 5 minutes

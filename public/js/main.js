@@ -167,6 +167,19 @@ function navigateToModule(module) {
 }
 
 // ============================
+// FUNCIONES DE NAVEGACIÓN Y SESIÓN
+// ============================
+function logout() {
+    if (confirm('¿Está seguro de que desea cerrar sesión?')) {
+        window.location.href = '/login';
+    }
+}
+
+function navigateTo(path) {
+    window.location.href = path;
+}
+
+// ============================
 // FUNCIONES DE INICIALIZACIÓN
 // ============================
 async function updateStats() {
@@ -358,5 +371,11 @@ window.BuyTrack = {
     navigateToModule,
     formatNumber,
     getCurrencySymbol,
-    formatCurrency
+    formatCurrency,
+    logout,
+    navigateTo
 };
+
+// Make specific functions available globally for HTML onclick
+window.logout = logout;
+window.navigateTo = navigateTo;

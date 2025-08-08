@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Functions - BuyTrack</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-info { background: #06b6d4; color: white; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #3b82f6;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1><i class="fas fa-bug"></i> Test de Funciones - BuyTrack</h1>
+
+    <div class="test-section">
+        <h2>Funciones Principales</h2>
+        <button class="btn btn-primary" onclick="testLogout()">
+            <i class="fas fa-sign-out-alt"></i> Test Logout
+        </button>
+        <button class="btn btn-primary" onclick="testNavigate()">
+            <i class="fas fa-external-link-alt"></i> Test Navigate
+        </button>
+        <div id="main-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Funciones Centros de Costo</h2>
+        <button class="btn btn-success" onclick="testOpenCreateCenterModal()">
+            <i class="fas fa-plus"></i> Test Create Center Modal
+        </button>
+        <button class="btn btn-success" onclick="testRefreshAll()">
+            <i class="fas fa-sync-alt"></i> Test Refresh All
+        </button>
+        <button class="btn btn-success" onclick="testExportReport()">
+            <i class="fas fa-file-export"></i> Test Export Report
+        </button>
+        <div id="center-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Funciones Presupuestos</h2>
+        <button class="btn btn-info" onclick="testOpenCreateBudgetModal()">
+            <i class="fas fa-plus"></i> Test Create Budget Modal
+        </button>
+        <button class="btn btn-info" onclick="testRefreshBudgets()">
+            <i class="fas fa-sync-alt"></i> Test Refresh Budgets
+        </button>
+        <button class="btn btn-info" onclick="testExportBudgetReport()">
+            <i class="fas fa-file-export"></i> Test Export Budget Report
+        </button>
+        <div id="budget-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Estado de Variables Globales</h2>
+        <button class="btn btn-primary" onclick="checkGlobals()">
+            <i class="fas fa-search"></i> Verificar Variables Globales
+        </button>
+        <div id="globals-result" class="result"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/cost-centers-advanced.js"></script>
+    <script src="js/budgets-advanced.js"></script>
+    
+    <script>
+        function testLogout() {
+            try {
+                const result = document.getElementById('main-result');
+                if (typeof logout === 'function') {
+                    result.innerHTML = '✅ logout function exists and is callable';
+                    // Don't actually call logout in test
+                } else {
+                    result.innerHTML = '❌ logout function not found';
+                }
+            } catch (error) {
+                document.getElementById('main-result').innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        function testNavigate() {
+            try {
+                const result = document.getElementById('main-result');
+                if (typeof navigateTo === 'function') {
+                    result.innerHTML = '✅ navigateTo function exists and is callable';
+                    // Don't actually navigate in test
+                } else {
+                    result.innerHTML = '❌ navigateTo function not found';
+                }
+            } catch (error) {
+                document.getElementById('main-result').innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+
+        function testOpenCreateCenterModal() {
+            try {
+                const result = document.getElementById('center-result');
+                if (typeof openCreateCenterModal === 'function') {
+                    result.innerHTML = '✅ openCreateCenterModal function exists';
+                    // Test if it runs without error (won't actually open modal without proper DOM)
+                    openCreateCenterModal();
+                } else {
+                    result.innerHTML = '❌ openCreateCenterModal function not found';
+                }
+            } catch (error) {
+                document.getElementById('center-result').innerHTML = '⚠️ Function exists but error: ' + error.message;
+            }
+        }
+
+        function testRefreshAll() {
+            try {
+                const result = document.getElementById('center-result');
+                if (typeof refreshAll === 'function') {
+                    result.innerHTML = '✅ refreshAll function exists';
+                    refreshAll();
+                } else {
+                    result.innerHTML = '❌ refreshAll function not found';
+                }
+            } catch (error) {
+                document.getElementById('center-result').innerHTML = '⚠️ Function exists but error: ' + error.message;
+            }
+        }
+
+        function testExportReport() {
+            try {
+                const result = document.getElementById('center-result');
+                if (typeof exportReport === 'function') {
+                    result.innerHTML = '✅ exportReport function exists';
+                    exportReport();
+                } else {
+                    result.innerHTML = '❌ exportReport function not found';
+                }
+            } catch (error) {
+                document.getElementById('center-result').innerHTML = '⚠️ Function exists but error: ' + error.message;
+            }
+        }
+
+        function testOpenCreateBudgetModal() {
+            try {
+                const result = document.getElementById('budget-result');
+                if (typeof openCreateBudgetModal === 'function') {
+                    result.innerHTML = '✅ openCreateBudgetModal function exists';
+                    openCreateBudgetModal();
+                } else {
+                    result.innerHTML = '❌ openCreateBudgetModal function not found';
+                }
+            } catch (error) {
+                document.getElementById('budget-result').innerHTML = '⚠️ Function exists but error: ' + error.message;
+            }
+        }
+
+        function testRefreshBudgets() {
+            try {
+                const result = document.getElementById('budget-result');
+                if (typeof refreshBudgetData === 'function') {
+                    result.innerHTML = '✅ refreshBudgetData function exists';
+                    refreshBudgetData();
+                } else {
+                    result.innerHTML = '❌ refreshBudgetData function not found';
+                }
+            } catch (error) {
+                document.getElementById('budget-result').innerHTML = '⚠️ Function exists but error: ' + error.message;
+            }
+        }
+
+        function testExportBudgetReport() {
+            try {
+                const result = document.getElementById('budget-result');
+                if (typeof exportBudgetReport === 'function') {
+                    result.innerHTML = '✅ exportBudgetReport function exists';
+                    exportBudgetReport();
+                } else {
+                    result.innerHTML = '❌ exportBudgetReport function not found';
+                }
+            } catch (error) {
+                document.getElementById('budget-result').innerHTML = '⚠️ Function exists but error: ' + error.message;
+            }
+        }
+
+        function checkGlobals() {
+            const result = document.getElementById('globals-result');
+            let status = '';
+            
+            status += `window.costCenters: ${window.costCenters ? '✅ Available' : '❌ Not found'}<br>`;
+            status += `window.budgetManager: ${window.budgetManager ? '✅ Available' : '❌ Not found'}<br>`;
+            status += `window.openCreateCenterModal: ${typeof window.openCreateCenterModal === 'function' ? '✅ Function' : '❌ Not found'}<br>`;
+            status += `window.openCreateBudgetModal: ${typeof window.openCreateBudgetModal === 'function' ? '✅ Function' : '❌ Not found'}<br>`;
+            status += `window.logout: ${typeof window.logout === 'function' ? '✅ Function' : '❌ Not found'}<br>`;
+            status += `window.navigateTo: ${typeof window.navigateTo === 'function' ? '✅ Function' : '❌ Not found'}<br>`;
+            
+            result.innerHTML = status;
+        }
+    </script>
+</body>
+</html>
