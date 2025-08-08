@@ -344,20 +344,17 @@ function throttle(func, limit) {
 }
 
 // ============================
-// MANEJO DE ERRORES GLOBAL
+// MANEJO DE ERRORES GLOBAL (DESACTIVADO)
 // ============================
+// Manejo de errores más silencioso - solo log en consola
 window.addEventListener('error', function(e) {
-    console.error('Global error:', e.error);
-    if (!isLoading) {
-        showNotification('Ha ocurrido un error inesperado', 'error');
-    }
+    console.error('Error detectado:', e.error);
+    // Removido: showNotification('Ha ocurrido un error inesperado', 'error');
 });
 
 window.addEventListener('unhandledrejection', function(e) {
-    console.error('Unhandled promise rejection:', e.reason);
-    if (!isLoading) {
-        showNotification('Error de conexión', 'error');
-    }
+    console.error('Promise rejection:', e.reason);
+    // Removido: showNotification('Error de conexión', 'error');
 });
 
 // ============================

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Compras - Módulos</title>
+    <title>Gestión de Compras - Sistema de Compras</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/dashboard.css">
@@ -15,16 +15,16 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fas fa-building"></i>
-                    <h1>Sistema de Compras</h1>
+                    <h1>Gestión de Compras</h1>
                 </div>
-                <div class="header-info">
-                    <span class="user-info" id="user-info">
+                <div class="header-actions">
+                    <div class="user-info" id="user-info">
                         <i class="fas fa-user"></i>
                         <span id="user-name">Usuario</span>
-                    </span>
+                    </div>
                     <button class="btn-logout" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i>
-                        Cerrar Sesión
+                        <span>Salir</span>
                     </button>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                             <div class="module-content">
                                 <h3>Gestión de Presupuestos</h3>
                                 <p>Control integral de presupuestos y costos</p>
-                                <div class="module-status active"><i class="fas fa-check-circle"></i> Profesional</div>
+                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
                             </div>
                         </div>
 
@@ -81,7 +81,7 @@
                             <div class="module-content">
                                 <h3>Centros de Costos</h3>
                                 <p>Gestión y creación de centros de costo</p>
-                                <div class="module-status active"><i class="fas fa-check-circle"></i> Profesional</div>
+                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
                             </div>
                         </div>
                     </div>
@@ -107,10 +107,25 @@
 
     <script src="js/main.js"></script>
     <script>
-        checkAuth();
-        function navigateTo(url) { window.location.href = url; }
-        function logout(){ if(confirm('¿Estás seguro de que deseas cerrar sesión?')){ localStorage.removeItem('authToken'); localStorage.removeItem('currentUser'); window.location.href='/login.html'; } }
-        (function init(){ const u = JSON.parse(localStorage.getItem('currentUser')||'{}'); const el=document.getElementById('user-name'); if(el) el.textContent = u.name || u.username || 'Usuario'; })();
+        // Funciones de la página principal
+        function navigateTo(url) { 
+            window.location.href = url; 
+        }
+        
+        function logout() { 
+            if(confirm('¿Estás seguro de que deseas cerrar sesión?')) { 
+                localStorage.removeItem('authToken'); 
+                localStorage.removeItem('currentUser'); 
+                window.location.href='/login.html'; 
+            } 
+        }
+        
+        // Inicialización básica - sin checkAuth para evitar errores
+        (function init() { 
+            const u = JSON.parse(localStorage.getItem('currentUser') || '{}'); 
+            const el = document.getElementById('user-name'); 
+            if(el) el.textContent = u.name || u.username || 'Usuario'; 
+        })();
     </script>
 </body>
 </html>
