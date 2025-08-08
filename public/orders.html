@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Órdenes de Compra - BuyTrack</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/orders.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-building"></i>
+                    <h1>Sistema de Compras</h1>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                    <a href="/suppliers" class="nav-link">
+                        <i class="fas fa-building"></i> Proveedores
+                    </a>
+                    <a href="/orders" class="nav-link active">
+                        <i class="fas fa-file-invoice"></i> Órdenes
+                    </a>
+                    <button class="btn-logout" onclick="logout()" style="margin-left: auto;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Page Header -->
+        <section class="page-header">
+            <div class="page-header-content">
+                <div class="page-title">
+                    <h1><i class="fas fa-file-invoice-dollar"></i> Órdenes de Compra</h1>
+                    <p>Gestiona y genera órdenes de compra profesionales</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn-primary" onclick="openCreateOrderModal()">
+                        <i class="fas fa-plus"></i> Nueva Orden
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters and Search -->
+        <section class="filters-section">
+            <div class="filters-content">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar órdenes...">
+                </div>
+                <div class="filter-controls">
+                    <select id="status-filter">
+                        <option value="">Todos los Estados</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="approved">Aprobada</option>
+                        <option value="sent">Enviada</option>
+                        <option value="received">Recibida</option>
+                        <option value="cancelled">Cancelada</option>
+                    </select>
+                    <select id="sort-select">
+                        <option value="created_at">Fecha de Creación</option>
+                        <option value="order_number">Número de Orden</option>
+                        <option value="total_amount">Monto Total</option>
+                        <option value="supplier_name">Proveedor</option>
+                    </select>
+                    <button class="btn-secondary" onclick="refreshOrders()">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Orders Grid -->
+        <section class="orders-section">
+            <div class="orders-container">
+                <div class="orders-grid" id="orders-grid">
+                    <!-- Las órdenes se cargarán dinámicamente aquí -->
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i class="fas fa-file-invoice"></i>
+                    <h3>No hay órdenes de compra</h3>
+                    <p>Comienza creando tu primera orden de compra</p>
+                    <button class="btn-primary" onclick="openCreateOrderModal()">
+                        <i class="fas fa-plus"></i> Crear Orden
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal para Crear Orden -->
+        <div class="modal" id="order-modal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2>Nueva Orden de Compra</h2>
+                    <button class="modal-close" onclick="closeOrderModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="order-form">
+                    <div class="order-form-content">
+                        <!-- Información General -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-info-circle"></i> Información General</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="supplier_id">Proveedor *</label>
+                                    <select id="supplier_id" name="supplier_id" required>
+                                        <option value="">Seleccionar proveedor...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="delivery_date">Fecha de Entrega</label>
+                                    <input type="date" id="delivery_date" name="delivery_date">
+                                </div>
+                                <div class="form-group">
+                                    <label for="currency">Moneda *</label>
+                                    <select id="currency" name="currency" required>
+                                        <option value="CLP">Pesos Chilenos (CLP)</option>
+                                        <option value="UF">Unidades de Fomento (UF)</option>
+                                        <option value="USD">Dólares Americanos (USD)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="payment_terms">Plazo de Pago *</label>
+                                    <select id="payment_terms" name="payment_terms" required>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="15 días">15 días</option>
+                                        <option value="30 días">30 días</option>
+                                        <option value="45 días">45 días</option>
+                                        <option value="60 días">60 días</option>
+                                    </select>
+                                </div>
+                                <!-- Nuevo: Centro de Costo -->
+                                <div class="form-group">
+                                    <label for="cost_center_id">Centro de Costo *</label>
+                                    <select id="cost_center_id" name="cost_center_id" required>
+                                        <option value="">Seleccionar centro...</option>
+                                    </select>
+                                    <small id="budget-status" class="help-text"></small>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="notes">Notas</label>
+                                    <textarea id="notes" name="notes" rows="3" placeholder="Notas adicionales para la orden..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Direcciones -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-map-marker-alt"></i> Direcciones</h3>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="billing_address">Dirección de Facturación</label>
+                                    <textarea id="billing_address" name="billing_address" rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="shipping_address">Dirección de Envío</label>
+                                    <textarea id="shipping_address" name="shipping_address" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Productos -->
+                        <div class="form-section">
+                            <h3><i class="fas fa-box"></i> Productos</h3>
+                            <div class="products-section">
+                                <div class="add-product-controls">
+                                    <select id="available-products" onchange="addProductToOrder()">
+                                        <option value="">Seleccionar producto para agregar...</option>
+                                    </select>
+                                    <button type="button" class="btn-secondary" onclick="refreshProducts()">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="order-items" id="order-items">
+                                    <!-- Los productos seleccionados aparecerán aquí -->
+                                </div>
+                                
+                                <div class="order-totals" id="order-totals">
+                                    <div class="totals-grid">
+                                        <div class="total-row">
+                                            <span>Subtotal:</span>
+                                            <span id="subtotal-display">$0.00</span>
+                                        </div>
+                                        <div class="total-row">
+                                            <span>Impuestos (19%):</span>
+                                            <span id="tax-display">$0.00</span>
+                                        </div>
+                                        <div class="total-row total-final">
+                                            <span>Total:</span>
+                                            <span id="total-display">$0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeOrderModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Crear Orden
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para Ver Orden -->
+        <div class="modal" id="view-order-modal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2 id="view-order-title">Orden de Compra</h2>
+                    <button class="modal-close" onclick="closeViewOrderModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="order-view-content" id="order-view-content">
+                    <!-- El contenido de la orden se cargará aquí -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/orders.js"></script>
+    <script>
+        // Verificar autenticación
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        function logout() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login.html';
+            }
+        }
+        
+        // Verificar al cargar la página
+        if (!checkAuth()) {
+            // Si no está autenticado, redirigir inmediatamente
+        }
+    </script>
+</body>
+</html>

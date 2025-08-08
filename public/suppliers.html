@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Proveedores - BuyTrack</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/suppliers.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-building"></i>
+                    <h1>Sistema de Compras</h1>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                    <a href="/suppliers" class="nav-link active">
+                        <i class="fas fa-building"></i> Proveedores
+                    </a>
+                    <a href="/orders" class="nav-link">
+                        <i class="fas fa-file-invoice"></i> Órdenes
+                    </a>
+                    <button class="btn-logout" onclick="logout()" style="margin-left: auto;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Page Header -->
+        <section class="page-header">
+            <div class="page-header-content">
+                <div class="page-title">
+                    <h1><i class="fas fa-building"></i> Gestión de Proveedores</h1>
+                    <p>Administra información de proveedores y sus productos</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn-primary" onclick="openAddSupplierModal()">
+                        <i class="fas fa-plus"></i> Nuevo Proveedor
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters and Search -->
+        <section class="filters-section">
+            <div class="filters-content">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar proveedores...">
+                </div>
+                <div class="filter-controls">
+                    <select id="sort-select">
+                        <option value="name">Ordenar por Nombre</option>
+                        <option value="created_at">Fecha de Registro</option>
+                        <option value="product_count">Cantidad de Productos</option>
+                    </select>
+                    <button class="btn-secondary" onclick="refreshSuppliers()">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Suppliers Grid -->
+        <section class="suppliers-section">
+            <div class="suppliers-container">
+                <div class="suppliers-grid" id="suppliers-grid">
+                    <!-- Los proveedores se cargarán dinámicamente aquí -->
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i class="fas fa-building"></i>
+                    <h3>No hay proveedores registrados</h3>
+                    <p>Comienza agregando tu primer proveedor al sistema</p>
+                    <button class="btn-primary" onclick="openAddSupplierModal()">
+                        <i class="fas fa-plus"></i> Agregar Proveedor
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal para Agregar/Editar Proveedor -->
+        <div class="modal" id="supplier-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Nuevo Proveedor</h2>
+                    <button class="modal-close" onclick="closeSupplierModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="supplier-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="name">Nombre de la Empresa *</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact_person">Persona de Contacto</label>
+                            <input type="text" id="contact_person" name="contact_person">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Teléfono</label>
+                            <input type="tel" id="phone" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Dirección</label>
+                            <input type="text" id="address" name="address">
+                        </div>
+                        <div class="form-group">
+                            <label for="city">Ciudad</label>
+                            <input type="text" id="city" name="city">
+                        </div>
+                        <div class="form-group">
+                            <label for="country">País</label>
+                            <input type="text" id="country" name="country">
+                        </div>
+                        <div class="form-group">
+                            <label for="tax_id">Rut</label>
+                            <input type="text" id="tax_id" name="tax_id">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="payment_terms">Plazos de Pago</label>
+                            <input type="text" id="payment_terms" name="payment_terms" placeholder="ej: 30 días">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeSupplierModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal para Productos del Proveedor -->
+        <div class="modal" id="products-modal">
+            <div class="modal-content large">
+                <div class="modal-header">
+                    <h2 id="products-modal-title">Productos del Proveedor</h2>
+                    <button class="modal-close" onclick="closeProductsModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="products-content">
+                    <div class="products-header">
+                        <button class="btn-primary" onclick="openAddProductModal()">
+                            <i class="fas fa-plus"></i> Agregar Producto
+                        </button>
+                    </div>
+                    <div class="products-list" id="products-list">
+                        <!-- Los productos se cargarán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Agregar/Editar Producto -->
+        <div class="modal" id="product-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="product-modal-title">Nuevo Producto</h2>
+                    <button class="modal-close" onclick="closeProductModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="product-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="product_name">Nombre del Producto *</label>
+                            <input type="text" id="product_name" name="product_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product_code">Código del Producto</label>
+                            <input type="text" id="product_code" name="product_code" readonly placeholder="Se generará automáticamente">
+                            <small class="form-help">El código se genera automáticamente al guardar el producto</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="unit_price">Precio Unitario</label>
+                            <input type="number" id="unit_price" name="unit_price" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="unit_of_measure">Unidad de Medida</label>
+                            <select id="unit_of_measure" name="unit_of_measure">
+                                <option value="unidad">Servicio Mensual</option>
+                                <option value="unidad">Servicio Diario</option>
+                                <option value="unidad">Servicio Semanal</option>
+                                <option value="unidad">Unidad</option>
+                                <option value="caja">Caja</option>
+                                <option value="paquete">Paquete</option>
+                                <option value="metro">Metro</option>
+                                <option value="litro">Litro</option>
+                                <option value="kilogramo">Kilogramo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="currency">Moneda</label>
+                            <select id="currency" name="currency">
+                                <option value="CLP">CLP</option>
+                                <option value="UF">UF</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="availability_status">Estado</label>
+                            <select id="availability_status" name="availability_status">
+                                <option value="available" selected>Disponible</option>
+                                <option value="out_of_stock">Agotado</option>
+                                <option value="discontinued">Descontinuado</option>
+                            </select>
+                            <small class="form-help">Los productos nuevos se crean como "Disponible" por defecto</small>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="description">Descripción</label>
+                            <textarea id="description" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeProductModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/suppliers.js"></script>
+    <script>
+        // Verificar autenticación
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+        
+        function logout() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login.html';
+            }
+        }
+        
+        // Verificar al cargar la página
+        if (!checkAuth()) {
+            // Si no está autenticado, redirigir inmediatamente
+        }
+    </script>
+</body>
+</html>

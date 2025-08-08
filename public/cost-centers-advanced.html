@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centros de Costos - BuyTrack Pro</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/advanced-modules.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-building"></i>
+                    <h1>Sistema de Compras Pro</h1>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                    <a href="/control-panel" class="nav-link">
+                        <i class="fas fa-chart-pie"></i> Panel de Control
+                    </a>
+                    <a href="/budgets-advanced" class="nav-link">
+                        <i class="fas fa-coins"></i> Presupuestos
+                    </a>
+                    <a href="/cost-centers-advanced" class="nav-link active">
+                        <i class="fas fa-diagram-project"></i> Centros de Costos
+                    </a>
+                    <a href="/orders" class="nav-link">
+                        <i class="fas fa-file-invoice"></i> Órdenes
+                    </a>
+                    <a href="/suppliers" class="nav-link">
+                        <i class="fas fa-building"></i> Proveedores
+                    </a>
+                    <button class="btn-logout" onclick="logout()" style="margin-left: auto;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Advanced Page Header -->
+        <section class="advanced-page-header">
+            <div class="page-header-content">
+                <div class="page-title-section">
+                    <h1><i class="fas fa-diagram-project"></i> Gestión Avanzada de Centros de Costos</h1>
+                    <p class="page-subtitle">Administración integral con análisis de rendimiento y control presupuestario</p>
+                    <div class="breadcrumb">
+                        <span>Sistema</span> <i class="fas fa-chevron-right"></i> 
+                        <span>Finanzas</span> <i class="fas fa-chevron-right"></i> 
+                        <span class="active">Centros de Costos</span>
+                    </div>
+                </div>
+                <div class="page-actions-advanced">
+                    <div class="quick-actions">
+                        <button class="btn-ghost" onclick="exportReport()" title="Exportar Reporte">
+                            <i class="fas fa-file-export"></i>
+                        </button>
+                        <button class="btn-ghost" onclick="printReport()" title="Imprimir">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        <button class="btn-ghost" onclick="refreshAll()" title="Actualizar Todo">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <button class="btn-primary-large" onclick="openCreateCenterModal()">
+                        <i class="fas fa-plus"></i>
+                        <span>Nuevo Centro de Costo</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Metrics Dashboard -->
+        <section class="metrics-dashboard">
+            <div class="metrics-grid">
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <h3>Centros Activos</h3>
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="metric-value">
+                        <span id="active-centers-count">0</span>
+                        <small class="metric-change positive" id="active-change">+0%</small>
+                    </div>
+                    <div class="metric-footer">
+                        <span class="metric-label">vs. mes anterior</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <h3>Presupuesto Total</h3>
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="metric-value">
+                        <span id="total-budget-amount">$0</span>
+                        <small class="metric-trend">
+                            <i class="fas fa-chart-line"></i>
+                        </small>
+                    </div>
+                    <div class="metric-footer">
+                        <span class="metric-label">distribuido este mes</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card warning">
+                    <div class="metric-header">
+                        <h3>Utilización Promedio</h3>
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="metric-value">
+                        <span id="avg-utilization">0%</span>
+                        <div class="utilization-bar">
+                            <div class="utilization-fill" id="utilization-fill"></div>
+                        </div>
+                    </div>
+                    <div class="metric-footer">
+                        <span class="metric-label">del presupuesto usado</span>
+                    </div>
+                </div>
+                
+                <div class="metric-card danger">
+                    <div class="metric-header">
+                        <h3>Centros Sobre Presupuesto</h3>
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="metric-value">
+                        <span id="overbudget-centers">0</span>
+                        <small class="metric-alert" id="overbudget-alert">
+                            <i class="fas fa-bell"></i>
+                        </small>
+                    </div>
+                    <div class="metric-footer">
+                        <span class="metric-label">requieren atención</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Filters and Controls -->
+        <section class="advanced-controls">
+            <div class="controls-container">
+                <div class="filters-group">
+                    <div class="filter-item">
+                        <label>Período de Análisis:</label>
+                        <select id="period-filter" class="advanced-select">
+                            <option value="current">Mes Actual</option>
+                            <option value="last3">Últimos 3 Meses</option>
+                            <option value="last6">Últimos 6 Meses</option>
+                            <option value="last12">Último Año</option>
+                            <option value="custom">Período Personalizado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label>Estado del Centro:</label>
+                        <select id="status-filter" class="advanced-select">
+                            <option value="">Todos los Estados</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Inactivos</option>
+                            <option value="overbudget">Sobre Presupuesto</option>
+                            <option value="underutilized">Subutilizados</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-item">
+                        <label>Tipo de Centro:</label>
+                        <select id="type-filter" class="advanced-select">
+                            <option value="">Todos los Tipos</option>
+                            <option value="operational">Operacional</option>
+                            <option value="administrative">Administrativo</option>
+                            <option value="production">Producción</option>
+                            <option value="maintenance">Mantenimiento</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="search-group">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Buscar por código, nombre o responsable...">
+                    </div>
+                    <button class="btn-filter" onclick="applyAdvancedFilters()">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Performance Analytics Section -->
+        <section class="analytics-section">
+            <div class="analytics-container">
+                <div class="chart-panel">
+                    <div class="chart-header">
+                        <h3>Análisis de Utilización de Presupuesto</h3>
+                        <div class="chart-controls">
+                            <button class="chart-btn active" data-chart="utilization">Utilización</button>
+                            <button class="chart-btn" data-chart="spending">Gastos</button>
+                            <button class="chart-btn" data-chart="trend">Tendencias</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="utilizationChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="insights-panel">
+                    <h3>Insights Inteligentes</h3>
+                    <div class="insights-list" id="insights-list">
+                        <!-- Los insights se cargarán dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Cost Centers Table -->
+        <section class="data-section">
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Centros de Costos Detallados</h3>
+                    <div class="table-actions">
+                        <div class="view-options">
+                            <button class="view-btn active" data-view="table">
+                                <i class="fas fa-table"></i>
+                            </button>
+                            <button class="view-btn" data-view="cards">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                        </div>
+                        <select id="sort-by" class="sort-select">
+                            <option value="name">Ordenar por Nombre</option>
+                            <option value="code">Ordenar por Código</option>
+                            <option value="utilization">Ordenar por Utilización</option>
+                            <option value="budget">Ordenar por Presupuesto</option>
+                            <option value="spending">Ordenar por Gasto</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="advanced-table-wrapper" id="table-view">
+                    <table class="advanced-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="select-all">
+                                </th>
+                                <th class="sortable" data-sort="code">
+                                    Código <i class="fas fa-sort"></i>
+                                </th>
+                                <th class="sortable" data-sort="name">
+                                    Centro de Costo <i class="fas fa-sort"></i>
+                                </th>
+                                <th>Manager</th>
+                                <th>Presupuesto Mensual</th>
+                                <th>Gastado</th>
+                                <th>Utilización</th>
+                                <th>Estado</th>
+                                <th>Última Actividad</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="centers-table-body">
+                            <!-- Los datos se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="cards-view hidden" id="cards-view">
+                    <div class="centers-grid" id="centers-grid">
+                        <!-- Las tarjetas se cargarán dinámicamente -->
+                    </div>
+                </div>
+                
+                <div class="table-footer">
+                    <div class="table-info">
+                        <span id="showing-info">Mostrando 0 de 0 centros</span>
+                    </div>
+                    <div class="pagination" id="pagination">
+                        <!-- La paginación se generará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Advanced Modal for Creating/Editing Cost Center -->
+    <div id="costCenterModal" class="advanced-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="modal-title">Nuevo Centro de Costo</h2>
+                <button class="modal-close" onclick="closeCostCenterModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="costCenterForm" class="advanced-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="center-code">Código del Centro *</label>
+                            <input type="text" id="center-code" required pattern="[A-Z0-9-]+" 
+                                   placeholder="Ej: ADM-001, PROD-200">
+                            <small class="form-help">Solo letras mayúsculas, números y guiones</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="center-name">Nombre del Centro *</label>
+                            <input type="text" id="center-name" required 
+                                   placeholder="Ej: Administración General">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="center-type">Tipo de Centro</label>
+                            <select id="center-type">
+                                <option value="operational">Operacional</option>
+                                <option value="administrative">Administrativo</option>
+                                <option value="production">Producción</option>
+                                <option value="maintenance">Mantenimiento</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="center-manager">Responsable</label>
+                            <input type="text" id="center-manager" 
+                                   placeholder="Nombre del responsable">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="center-email">Email del Responsable</label>
+                            <input type="email" id="center-email" 
+                                   placeholder="responsable@empresa.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="center-department">Departamento</label>
+                            <input type="text" id="center-department" 
+                                   placeholder="Ej: Recursos Humanos">
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h4>Configuración Presupuestaria</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="default-currency">Moneda por Defecto</label>
+                                <select id="default-currency">
+                                    <option value="CLP">Pesos Chilenos (CLP)</option>
+                                    <option value="USD">Dólares Americanos (USD)</option>
+                                    <option value="UF">Unidades de Fomento (UF)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="approval-limit">Límite de Aprobación</label>
+                                <input type="number" id="approval-limit" min="0" step="0.01"
+                                       placeholder="Monto máximo sin aprobación adicional">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h4>Configuración Adicional</h4>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label for="center-description">Descripción</label>
+                                <textarea id="center-description" rows="3" 
+                                          placeholder="Descripción del propósito y alcance del centro de costo"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="is-active" checked>
+                                    <span class="checkmark"></span>
+                                    Centro Activo
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="requires-approval">
+                                    <span class="checkmark"></span>
+                                    Requiere Aprobación para Órdenes
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeCostCenterModal()">
+                    Cancelar
+                </button>
+                <button type="submit" form="costCenterForm" class="btn-primary">
+                    <i class="fas fa-save"></i> Guardar Centro
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Details Modal -->
+    <div id="centerDetailsModal" class="advanced-modal">
+        <div class="modal-container large">
+            <div class="modal-header">
+                <h2 id="details-title">Detalles del Centro de Costo</h2>
+                <button class="modal-close" onclick="closeCenterDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="details-tabs">
+                    <button class="tab-btn active" data-tab="overview">General</button>
+                    <button class="tab-btn" data-tab="budget">Presupuesto</button>
+                    <button class="tab-btn" data-tab="orders">Órdenes</button>
+                    <button class="tab-btn" data-tab="analytics">Análisis</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="overview-tab" class="tab-panel active">
+                        <!-- Contenido del overview -->
+                    </div>
+                    <div id="budget-tab" class="tab-panel">
+                        <!-- Contenido del presupuesto -->
+                    </div>
+                    <div id="orders-tab" class="tab-panel">
+                        <!-- Contenido de órdenes -->
+                    </div>
+                    <div id="analytics-tab" class="tab-panel">
+                        <!-- Contenido de análisis -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h3 id="confirm-title">Confirmar Acción</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">¿Está seguro de realizar esta acción?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeConfirmModal()">Cancelar</button>
+                <button class="btn-danger" id="confirm-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Cargando...</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
+    <script src="js/cost-centers-advanced.js"></script>
+</body>
+</html>

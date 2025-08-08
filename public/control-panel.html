@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Control</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+<div class="main-container">
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-gauge-high"></i>
+                <h1>Panel de Control</h1>
+            </div>
+            <div class="header-info">
+                <span class="user-info" id="user-info">
+                    <i class="fas fa-user"></i>
+                    <span id="user-name">Usuario</span>
+                </span>
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="dashboard-container">
+            <section class="welcome-section">
+                <h1>Resumen General</h1>
+                <p>Indicadores y analítica de compras</p>
+            </section>
+
+            <!-- Stats and analytics copied from enhanced index -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="stat-content">
+                            <h3 id="total-orders">-</h3>
+                            <p>Órdenes Emitidas</p>
+                            <span class="stat-change positive">Este mes</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                        <div class="stat-content">
+                            <h3 id="total-amount">-</h3>
+                            <p>Total Gastado</p>
+                            <span class="stat-change positive" id="total-amount-currency">CLP</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-building"></i></div>
+                        <div class="stat-content">
+                            <h3 id="active-suppliers">-</h3>
+                            <p>Proveedores Activos</p>
+                            <span class="stat-change">Registrados</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-content">
+                            <h3 id="pending-orders">-</h3>
+                            <p>Órdenes Pendientes</p>
+                            <span class="stat-change warning">En proceso</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-overview">
+                    <h2>Estado de Órdenes</h2>
+                    <div class="status-badges" id="status-badges"></div>
+                </div>
+            </section>
+
+            <section class="analytics-section">
+                <h2>Analítica</h2>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Tendencia de órdenes (últimos 6 meses)</h3>
+                            <span class="chart-subtitle">Por moneda</span>
+                        </div>
+                        <canvas id="ordersTrendChart" height="120"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Distribución de estados</h3>
+                            <span class="chart-subtitle">Todas las órdenes</span>
+                        </div>
+                        <canvas id="statusDistChart" height="120"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="recent-section">
+                <h2>Órdenes Recientes</h2>
+                <div class="recent-orders" id="recent-orders">
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Cargando órdenes recientes...
+                    </div>
+                </div>
+            </section>
+
+            <section class="top-suppliers-section">
+                <h2>Proveedores Destacados por Gasto</h2>
+                <div class="top-suppliers" id="top-suppliers">
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Cargando proveedores...
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/main.js"></script>
+<script>
+    checkAuth();
+    function logout(){ localStorage.removeItem('authToken'); localStorage.removeItem('currentUser'); location.href='/login.html'; }
+
+    async function loadDashboardStats() {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await fetch('/api/dashboard/stats', { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await response.json();
+            if (!data.success) return;
+            const stats = data.data;
+            document.getElementById('total-orders').textContent = stats.totalOrders;
+            document.getElementById('active-suppliers').textContent = stats.activeSuppliers;
+            document.getElementById('pending-orders').textContent = stats.pendingOrders;
+            const totals = stats.totalAmount || {};
+            const currencyPriority = ['CLP', 'USD', 'UF'];
+            const selectedCurrency = currencyPriority.find(c => totals[c] != null) || Object.keys(totals)[0] || 'CLP';
+            const mainCurrencyValue = totals[selectedCurrency] || 0;
+            document.getElementById('total-amount').textContent = window.BuyTrack.formatCurrency(mainCurrencyValue, selectedCurrency);
+            const currencyBadge = document.getElementById('total-amount-currency');
+            if (currencyBadge) currencyBadge.textContent = selectedCurrency;
+            updateStatusBadges(stats.statusCounts || {});
+            loadRecentOrders(stats.recentOrders);
+            drawStatusDistChart(stats.statusCounts || {});
+            await Promise.all([ loadOrdersTrendChart(), loadTopSuppliers() ]);
+        } catch (e) { console.error(e); }
+    }
+
+    function updateStatusBadges(statusCounts) {
+        const container = document.getElementById('status-badges');
+        const statusMap = { pending:{label:'Pendiente',class:'pending'}, approved:{label:'Aprobada',class:'approved'}, sent:{label:'Enviada',class:'sent'}, received:{label:'Recibida',class:'received'}, cancelled:{label:'Cancelada',class:'cancelled'} };
+        const statuses = Object.keys(statusMap);
+        container.innerHTML = statuses.map(k => { const cfg=statusMap[k]; const v=statusCounts[k]||0; return `<span class="badge-status ${cfg.class}"><i class="fas fa-circle"></i> ${cfg.label}: <strong>${v}</strong></span>` }).join('');
+    }
+
+    async function loadOrdersTrendChart(){
+        try{
+            const token = localStorage.getItem('authToken');
+            const res = await fetch('/api/dashboard/orders-trend', { headers:{ 'Authorization': `Bearer ${token}` }});
+            const json = await res.json(); if(!json.success) return;
+            const data = json.data || {}; const labels = Object.keys(data).sort(); const currencies = ['CLP','USD','UF'];
+            const datasets = currencies.map(curr => ({ label: curr, data: labels.map(ym=>{ const e=(data[ym]&&data[ym][curr])||{count:0,total:0}; return { x: ym, y: e.count, total: e.total, currency: curr }; }), borderColor: getCurrencyColor(curr), backgroundColor: getCurrencyColor(curr, .15), tension: .25, fill: true, spanGaps: true }));
+            const ctx = document.getElementById('ordersTrendChart').getContext('2d'); if(window.ordersTrendChart) window.ordersTrendChart.destroy();
+            window.ordersTrendChart = new Chart(ctx,{ type:'line', data:{ labels, datasets }, options:{ responsive:true, interaction:{ mode:'index', intersect:false }, plugins:{ legend:{ position:'bottom' }, tooltip:{ callbacks:{ label:(context)=>{ const p=context.raw||{}; const count=context.parsed.y||0; const total=p.total||0; return `${context.dataset.label}: ${count} órdenes · ${window.BuyTrack.formatCurrency(total, p.currency||context.dataset.label)}`; }, title:(items)=>{ if(!items||!items.length) return ''; const ym=items[0].label; const [y,m]=ym.split('-'); const d=new Date(Number(y), Number(m)-1,1); return d.toLocaleDateString('es-CL',{month:'long',year:'numeric'}); } } } }, scales:{ x:{ ticks:{ callback:(value,idx)=>{ const ym=labels[idx]; const [y,m]=ym.split('-'); const d=new Date(Number(y), Number(m)-1,1); return d.toLocaleDateString('es-CL',{month:'short'}); } } }, y:{ beginAtZero:true, title:{ display:true, text:'Órdenes' } } } } });
+        }catch(e){ console.error('trend', e); }
+    }
+
+    function getCurrencyColor(curr, alpha=1){ const map={ CLP:'34,139,34', USD:'52,152,219', UF:'155,89,182' }; const rgb=map[curr]||'52,73,94'; return `rgba(${rgb}, ${alpha})`; }
+
+    function loadRecentOrders(orders){ const c=document.getElementById('recent-orders'); if(!orders||orders.length===0){ c.innerHTML=`<div class="loading-placeholder"><i class="fas fa-inbox"></i>No hay órdenes recientes</div>`; return; } c.innerHTML = orders.map(o=>{ const cur=o.currency||'CLP'; const amt=Number(o.total_amount)||0; return `<div class=\"recent-order-item\"><div class=\"order-info-summary\"><h4>Orden #${o.order_number}</h4><p><strong>Proveedor:</strong> ${o.supplier_name||'N/A'}</p><p><strong>Fecha:</strong> ${o.order_date}</p><p><strong>Estado:</strong> <span class=\"status-${o.status}\">${getStatusText(o.status)}</span></p></div><div class=\"order-amount\">${window.BuyTrack.formatCurrency(amt, cur)}</div></div>`; }).join(''); }
+
+    function getStatusText(s){ const m={ pending:'Pendiente', approved:'Aprobada', sent:'Enviada', received:'Recibida', cancelled:'Cancelada' }; return m[s]||s; }
+
+    function getStatusColor(s){ const m={ pending:'#f39c12', approved:'#3498db', sent:'#2ecc71', received:'#27ae60', cancelled:'#e74c3c' }; return m[s]||'#7f8c8d'; }
+
+    function drawStatusDistChart(statusCounts){ const labels=Object.keys(statusCounts||{}); const counts=labels.map(k=>statusCounts[k]||0); const display=labels.map(getStatusText); const colors=labels.map(getStatusColor); const ctx=document.getElementById('statusDistChart').getContext('2d'); if(window.statusDistChart) window.statusDistChart.destroy(); window.statusDistChart=new Chart(ctx,{ type:'doughnut', data:{ labels: display, datasets:[{ data: counts, backgroundColor: colors, borderWidth:1, hoverOffset:8 }]}, options:{ plugins:{ legend:{ position:'bottom' }}}}); }
+
+    (function init(){ const user = JSON.parse(localStorage.getItem('currentUser')||'{}'); document.getElementById('user-name').textContent = user.name || user.username || 'Usuario'; loadDashboardStats(); })();
+</script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+/* ==============================================
+   COST CENTERS & BUDGETS MODULES STYLES
+   ============================================== */
+
+/* Cost Centers Grid */
+.cost-centers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.cost-center-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e1e5e9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.cost-center-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.cost-center-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.cost-center-card .card-title h3 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cost-center-code {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.cost-center-card .card-body {
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #555;
+    min-width: 80px;
+}
+
+.info-value {
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-description {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f3f5;
+}
+
+.card-description p {
+    margin: 0;
+    color: #666;
+    font-style: italic;
+}
+
+/* Budget Table Styles */
+.budget-table-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e1e5e9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #f1f3f5;
+    background: #f8f9fa;
+}
+
+.table-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.table-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.budget-data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.budget-data-table th {
+    background: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #e1e5e9;
+    white-space: nowrap;
+}
+
+.budget-data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f3f5;
+    vertical-align: middle;
+}
+
+.budget-row.danger {
+    background-color: rgba(231, 76, 60, 0.05);
+}
+
+.budget-row.warning {
+    background-color: rgba(243, 156, 18, 0.05);
+}
+
+.budget-row.success {
+    background-color: rgba(39, 174, 96, 0.05);
+}
+
+.cost-center-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cost-center-info i {
+    color: #3498db;
+}
+
+.currency-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+}
+
+.currency-badge.clp {
+    background: #27ae60;
+}
+
+.currency-badge.usd {
+    background: #3498db;
+}
+
+.currency-badge.uf {
+    background: #f39c12;
+}
+
+.amount-cell {
+    font-weight: 600;
+    text-align: right;
+}
+
+.amount-cell.spent {
+    color: #e74c3c;
+}
+
+.amount-cell.positive {
+    color: #27ae60;
+}
+
+.amount-cell.negative {
+    color: #e74c3c;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #ecf0f1;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 60px;
+}
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.success {
+    background: #27ae60;
+}
+
+.progress-fill.warning {
+    background: #f39c12;
+}
+
+.progress-fill.danger {
+    background: #e74c3c;
+}
+
+.progress-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 35px;
+    text-align: right;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.25rem;
+}
+
+/* Period Selector */
+.period-selector, .currency-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.period-selector label, .currency-selector label {
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap;
+}
+
+.period-input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+/* Budget Preview */
+.budget-preview {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.budget-preview h4 {
+    margin: 0 0 0.5rem 0;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preview-content p {
+    margin: 0;
+    color: #6c757d;
+}
+
+.preview-content strong {
+    color: #495057;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+}
+
+.status-badge.success {
+    background: #27ae60;
+}
+
+.status-badge.warning {
+    background: #f39c12;
+}
+
+.status-badge.danger {
+    background: #e74c3c;
+}
+
+.status-badge.info {
+    background: #3498db;
+}
+
+/* Button Icons */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #bbb;
+}
+
+.btn-icon.success {
+    border-color: #27ae60;
+    color: #27ae60;
+}
+
+.btn-icon.success:hover {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-icon.warning {
+    border-color: #f39c12;
+    color: #f39c12;
+}
+
+.btn-icon.warning:hover {
+    background: #f39c12;
+    color: white;
+}
+
+.btn-icon.danger {
+    border-color: #e74c3c;
+    color: #e74c3c;
+}
+
+.btn-icon.danger:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-icon.info {
+    border-color: #3498db;
+    color: #3498db;
+}
+
+.btn-icon.info:hover {
+    background: #3498db;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .cost-centers-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+    
+    .budget-data-table th,
+    .budget-data-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .table-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .table-actions {
+        justify-content: space-between;
+    }
+    
+    .progress-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+    }
+    
+    .progress-text {
+        text-align: center;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+}
+
+/* Form Improvements */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Loading States */
+.loading-placeholder {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* Animation for stats */
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card h3 {
+    animation: countUp 0.5s ease;
+}

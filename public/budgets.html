@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presupuestos - BuyTrack</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modules.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-building"></i>
+                    <h1>Sistema de Compras</h1>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                    <a href="/control-panel" class="nav-link">
+                        <i class="fas fa-chart-pie"></i> Panel de Control
+                    </a>
+                    <a href="/budgets" class="nav-link active">
+                        <i class="fas fa-coins"></i> Presupuestos
+                    </a>
+                    <a href="/cost-centers" class="nav-link">
+                        <i class="fas fa-diagram-project"></i> Centros de Costos
+                    </a>
+                    <a href="/orders" class="nav-link">
+                        <i class="fas fa-file-invoice"></i> Órdenes
+                    </a>
+                    <a href="/suppliers" class="nav-link">
+                        <i class="fas fa-building"></i> Proveedores
+                    </a>
+                    <button class="btn-logout" onclick="logout()" style="margin-left: auto;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Page Header -->
+        <section class="page-header">
+            <div class="page-header-content">
+                <div class="page-title">
+                    <h1><i class="fas fa-coins"></i> Gestión de Presupuestos</h1>
+                    <p>Administra los presupuestos mensuales por centro de costo</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn-primary" onclick="openCreateBudgetModal()">
+                        <i class="fas fa-plus"></i> Nuevo Presupuesto
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Period and Currency Selection -->
+        <section class="filters-section">
+            <div class="filters-content">
+                <div class="period-selector">
+                    <label for="month-select">Período:</label>
+                    <input type="month" id="month-select" class="period-input">
+                </div>
+                <div class="currency-selector">
+                    <label for="currency-filter">Moneda:</label>
+                    <select id="currency-filter">
+                        <option value="">Todas las Monedas</option>
+                        <option value="CLP">Pesos Chilenos (CLP)</option>
+                        <option value="USD">Dólares Americanos (USD)</option>
+                        <option value="UF">Unidades de Fomento (UF)</option>
+                    </select>
+                </div>
+                <div class="filter-controls">
+                    <button class="btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                    <button class="btn-info" onclick="exportToCSV()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Budget Summary Stats -->
+        <section class="stats-section">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-budget">$0</h3>
+                        <p>Presupuesto Total</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon danger">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-spent">$0</h3>
+                        <p>Total Gastado</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-remaining">$0</h3>
+                        <p>Total Disponible</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="overbudget-count">0</h3>
+                        <p>Centros Excedidos</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Budget Overview Table -->
+        <section class="content-section">
+            <div class="content-container">
+                <div class="budget-table-container">
+                    <div class="table-header">
+                        <h3><i class="fas fa-chart-bar"></i> Resumen de Presupuestos</h3>
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="search-input" placeholder="Buscar centro de costo...">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="budget-table" id="budget-table">
+                        <!-- La tabla se cargará dinámicamente aquí -->
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i class="fas fa-coins"></i>
+                    <h3>No hay presupuestos configurados</h3>
+                    <p>Comienza creando presupuestos para tus centros de costo</p>
+                    <button class="btn-primary" onclick="openCreateBudgetModal()">
+                        <i class="fas fa-plus"></i> Crear Presupuesto
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal para Crear/Editar Presupuesto -->
+        <div class="modal" id="budget-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="budget-modal-title">Nuevo Presupuesto</h2>
+                    <button class="modal-close" onclick="closeBudgetModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="budget-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="budget-cost-center">Centro de Costo *</label>
+                            <select id="budget-cost-center" name="cost_center_id" required>
+                                <option value="">Seleccionar centro...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="budget-month">Mes *</label>
+                            <input type="month" id="budget-month" name="month" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="budget-currency">Moneda *</label>
+                            <select id="budget-currency" name="currency" required>
+                                <option value="CLP">Pesos Chilenos (CLP)</option>
+                                <option value="USD">Dólares Americanos (USD)</option>
+                                <option value="UF">Unidades de Fomento (UF)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="budget-amount">Monto *</label>
+                            <input type="number" id="budget-amount" name="amount" required 
+                                   step="0.01" min="0" placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="budget-preview" id="budget-preview" style="display: none;">
+                        <h4><i class="fas fa-info-circle"></i> Vista Previa</h4>
+                        <div class="preview-content">
+                            <p>Se creará un presupuesto de <strong id="preview-amount">$0</strong> 
+                               para el centro <strong id="preview-center">-</strong> 
+                               en el mes <strong id="preview-month">-</strong></p>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeBudgetModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Guardar Presupuesto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Variables globales
+        let budgetData = [];
+        let costCenters = [];
+        let filteredBudgets = [];
+        let currentMonth = '';
+        let currentCurrency = '';
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            setupEventListeners();
+            initializeDefaults();
+            loadData();
+        });
+
+        function setupEventListeners() {
+            // Period and currency change
+            const monthSelect = document.getElementById('month-select');
+            const currencyFilter = document.getElementById('currency-filter');
+            
+            if (monthSelect) {
+                monthSelect.addEventListener('change', handlePeriodChange);
+            }
+            
+            if (currencyFilter) {
+                currencyFilter.addEventListener('change', handleCurrencyChange);
+            }
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', debounce(handleSearch, 300));
+            }
+
+            // Modal functionality
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    closeBudgetModal();
+                }
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeBudgetModal();
+                }
+            });
+
+            // Form submission and preview
+            const form = document.getElementById('budget-form');
+            if (form) {
+                form.addEventListener('submit', handleBudgetSubmit);
+                
+                // Real-time preview
+                const formInputs = form.querySelectorAll('input, select');
+                formInputs.forEach(input => {
+                    input.addEventListener('change', updateBudgetPreview);
+                    input.addEventListener('input', updateBudgetPreview);
+                });
+            }
+        }
+
+        function initializeDefaults() {
+            // Set current month as default
+            const now = new Date();
+            const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('month-select').value = yearMonth;
+            document.getElementById('budget-month').value = yearMonth;
+            currentMonth = yearMonth;
+            
+            // Check URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const costCenterId = urlParams.get('cost_center_id');
+            if (costCenterId) {
+                // If coming from cost centers page, pre-select the cost center
+                setTimeout(() => {
+                    const select = document.getElementById('budget-cost-center');
+                    if (select) {
+                        select.value = costCenterId;
+                    }
+                }, 500);
+            }
+        }
+
+        async function loadData() {
+            try {
+                showLoading();
+                await Promise.all([
+                    loadCostCenters(),
+                    loadBudgetData()
+                ]);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('Error al cargar los datos', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadCostCenters() {
+            try {
+                const response = await fetchAPI('/cost-centers');
+                costCenters = response.success ? (response.data || []).filter(cc => cc.is_active) : [];
+                populateCostCenterSelect();
+            } catch (error) {
+                console.error('Error loading cost centers:', error);
+            }
+        }
+
+        function populateCostCenterSelect() {
+            const select = document.getElementById('budget-cost-center');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">Seleccionar centro...</option>';
+            costCenters.forEach(cc => {
+                const option = document.createElement('option');
+                option.value = cc.id;
+                option.textContent = `${cc.code} - ${cc.name}`;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadBudgetData() {
+            try {
+                const month = document.getElementById('month-select').value;
+                if (!month) return;
+
+                const response = await fetchAPI(`/cost-centers/usage?month=${encodeURIComponent(month)}`);
+                budgetData = response.success ? (response.data || []) : [];
+                
+                applyFilters();
+                updateStats();
+                
+            } catch (error) {
+                console.error('Error loading budget data:', error);
+                showEmptyState();
+            }
+        }
+
+        function handlePeriodChange() {
+            currentMonth = document.getElementById('month-select').value;
+            loadBudgetData();
+        }
+
+        function handleCurrencyChange() {
+            currentCurrency = document.getElementById('currency-filter').value;
+            applyFilters();
+            updateStats();
+        }
+
+        function handleSearch() {
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            const currencyFilter = document.getElementById('currency-filter').value;
+            
+            filteredBudgets = budgetData.filter(budget => {
+                // Search filter
+                const matchesSearch = !searchQuery || 
+                    budget.cost_center_name.toLowerCase().includes(searchQuery);
+                
+                // Currency filter
+                const matchesCurrency = !currencyFilter || budget.currency === currencyFilter;
+                
+                return matchesSearch && matchesCurrency;
+            });
+            
+            renderBudgetTable();
+        }
+
+        function renderBudgetTable() {
+            const table = document.getElementById('budget-table');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (!table) return;
+            
+            if (filteredBudgets.length === 0) {
+                table.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'block';
+                return;
+            }
+            
+            table.style.display = 'block';
+            if (emptyState) emptyState.style.display = 'none';
+            
+            const tableHTML = `
+                <div class="table-responsive">
+                    <table class="budget-data-table">
+                        <thead>
+                            <tr>
+                                <th>Centro de Costo</th>
+                                <th>Moneda</th>
+                                <th>Presupuesto</th>
+                                <th>Gastado</th>
+                                <th>Disponible</th>
+                                <th>% Usado</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredBudgets.map(budget => createBudgetRow(budget)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            table.innerHTML = tableHTML;
+        }
+
+        function createBudgetRow(budget) {
+            const budgetAmount = Number(budget.budget) || 0;
+            const spentAmount = Number(budget.spent) || 0;
+            const remainingAmount = Number(budget.remaining) || 0;
+            const usagePercent = budgetAmount > 0 ? (spentAmount / budgetAmount) * 100 : 0;
+            
+            let statusClass = 'success';
+            let statusIcon = 'check-circle';
+            let statusText = 'OK';
+            
+            if (usagePercent >= 100) {
+                statusClass = 'danger';
+                statusIcon = 'exclamation-circle';
+                statusText = 'Excedido';
+            } else if (usagePercent >= 80) {
+                statusClass = 'warning';
+                statusIcon = 'exclamation-triangle';
+                statusText = 'Advertencia';
+            }
+            
+            return `
+                <tr class="budget-row ${statusClass}">
+                    <td>
+                        <div class="cost-center-info">
+                            <i class="fas fa-diagram-project"></i>
+                            <strong>${escapeHtml(budget.cost_center_name)}</strong>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="currency-badge ${budget.currency.toLowerCase()}">
+                            ${budget.currency}
+                        </span>
+                    </td>
+                    <td class="amount-cell">
+                        ${formatCurrency(budgetAmount, budget.currency)}
+                    </td>
+                    <td class="amount-cell spent">
+                        ${formatCurrency(spentAmount, budget.currency)}
+                    </td>
+                    <td class="amount-cell ${remainingAmount < 0 ? 'negative' : 'positive'}">
+                        ${formatCurrency(remainingAmount, budget.currency)}
+                    </td>
+                    <td>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill ${statusClass}" 
+                                     style="width: ${Math.min(usagePercent, 100)}%"></div>
+                            </div>
+                            <span class="progress-text">${Math.round(usagePercent)}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${statusClass}">
+                            <i class="fas fa-${statusIcon}"></i>
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon" onclick="editBudget(${budget.cost_center_id}, '${budget.currency}')" 
+                                    title="Editar presupuesto">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon danger" onclick="deleteBudget(${budget.cost_center_id}, '${budget.currency}')" 
+                                    title="Eliminar presupuesto">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn-icon info" onclick="viewDetails(${budget.cost_center_id}, '${budget.currency}')" 
+                                    title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function updateStats() {
+            const totals = filteredBudgets.reduce((acc, budget) => {
+                const budgetAmount = Number(budget.budget) || 0;
+                const spentAmount = Number(budget.spent) || 0;
+                const remainingAmount = Number(budget.remaining) || 0;
+                
+                acc.totalBudget += budgetAmount;
+                acc.totalSpent += spentAmount;
+                acc.totalRemaining += remainingAmount;
+                
+                if (remainingAmount < 0) {
+                    acc.overbudgetCount++;
+                }
+                
+                return acc;
+            }, {
+                totalBudget: 0,
+                totalSpent: 0,
+                totalRemaining: 0,
+                overbudgetCount: 0
+            });
+
+            // Animate the stats
+            const selectedCurrency = document.getElementById('currency-filter').value || 'CLP';
+            
+            // For mixed currencies, show as numbers
+            if (!document.getElementById('currency-filter').value) {
+                document.getElementById('total-budget').textContent = formatNumber(totals.totalBudget);
+                document.getElementById('total-spent').textContent = formatNumber(totals.totalSpent);
+                document.getElementById('total-remaining').textContent = formatNumber(totals.totalRemaining);
+            } else {
+                document.getElementById('total-budget').textContent = formatCurrency(totals.totalBudget, selectedCurrency);
+                document.getElementById('total-spent').textContent = formatCurrency(totals.totalSpent, selectedCurrency);
+                document.getElementById('total-remaining').textContent = formatCurrency(totals.totalRemaining, selectedCurrency);
+            }
+            
+            document.getElementById('overbudget-count').textContent = totals.overbudgetCount;
+        }
+
+        function refreshData() {
+            loadData();
+            showNotification('Datos actualizados', 'success');
+        }
+
+        // Modal functions
+        function openCreateBudgetModal() {
+            document.getElementById('budget-modal-title').textContent = 'Nuevo Presupuesto';
+            document.getElementById('budget-form').reset();
+            
+            // Set defaults
+            const now = new Date();
+            const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('budget-month').value = yearMonth;
+            
+            updateBudgetPreview();
+            showModal('budget-modal');
+        }
+
+        function closeBudgetModal() {
+            hideModal('budget-modal');
+        }
+
+        function updateBudgetPreview() {
+            const costCenterId = document.getElementById('budget-cost-center').value;
+            const month = document.getElementById('budget-month').value;
+            const currency = document.getElementById('budget-currency').value;
+            const amount = document.getElementById('budget-amount').value;
+            
+            const preview = document.getElementById('budget-preview');
+            
+            if (costCenterId && month && currency && amount) {
+                const costCenter = costCenters.find(cc => cc.id == costCenterId);
+                const costCenterName = costCenter ? `${costCenter.code} - ${costCenter.name}` : '-';
+                const monthName = new Date(month + '-01').toLocaleDateString('es-ES', { 
+                    year: 'numeric', 
+                    month: 'long' 
+                });
+                
+                document.getElementById('preview-center').textContent = costCenterName;
+                document.getElementById('preview-month').textContent = monthName;
+                document.getElementById('preview-amount').textContent = formatCurrency(parseFloat(amount), currency);
+                
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        async function handleBudgetSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.amount = parseFloat(data.amount);
+            
+            try {
+                showLoading();
+                
+                await fetchAPI('/budgets/upsert', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                
+                showNotification('Presupuesto guardado exitosamente', 'success');
+                closeBudgetModal();
+                loadBudgetData();
+                
+            } catch (error) {
+                console.error('Error saving budget:', error);
+                showNotification('Error al guardar el presupuesto', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function editBudget(costCenterId, currency) {
+            const budget = budgetData.find(b => b.cost_center_id == costCenterId && b.currency === currency);
+            if (!budget) return;
+            
+            document.getElementById('budget-modal-title').textContent = 'Editar Presupuesto';
+            document.getElementById('budget-cost-center').value = costCenterId;
+            document.getElementById('budget-month').value = currentMonth;
+            document.getElementById('budget-currency').value = currency;
+            document.getElementById('budget-amount').value = budget.budget;
+            
+            updateBudgetPreview();
+            showModal('budget-modal');
+        }
+
+        async function deleteBudget(costCenterId, currency) {
+            const budget = budgetData.find(b => b.cost_center_id == costCenterId && b.currency === currency);
+            if (!budget) return;
+            
+            if (!confirm(`¿Estás seguro de que deseas eliminar el presupuesto de ${budget.cost_center_name} en ${currency}?`)) {
+                return;
+            }
+            
+            try {
+                showLoading();
+                
+                await fetchAPI(`/budgets?cost_center_id=${costCenterId}&month=${encodeURIComponent(currentMonth)}&currency=${currency}`, {
+                    method: 'DELETE'
+                });
+                
+                showNotification('Presupuesto eliminado exitosamente', 'success');
+                loadBudgetData();
+                
+            } catch (error) {
+                console.error('Error deleting budget:', error);
+                showNotification('Error al eliminar el presupuesto', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function viewDetails(costCenterId, currency) {
+            // Navigate to orders filtered by this cost center
+            window.location.href = `/orders?cost_center_id=${costCenterId}&currency=${currency}&month=${currentMonth}`;
+        }
+
+        function exportToCSV() {
+            if (filteredBudgets.length === 0) {
+                showNotification('No hay datos para exportar', 'warning');
+                return;
+            }
+            
+            const headers = ['Centro de Costo', 'Moneda', 'Presupuesto', 'Gastado', 'Disponible', '% Usado'];
+            const csvContent = [
+                headers.join(','),
+                ...filteredBudgets.map(budget => {
+                    const usagePercent = budget.budget > 0 ? (budget.spent / budget.budget) * 100 : 0;
+                    return [
+                        `"${budget.cost_center_name}"`,
+                        budget.currency,
+                        budget.budget,
+                        budget.spent,
+                        budget.remaining,
+                        Math.round(usagePercent)
+                    ].join(',');
+                })
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `presupuestos_${currentMonth}.csv`;
+            link.click();
+            
+            showNotification('Archivo CSV descargado', 'success');
+        }
+
+        function showEmptyState() {
+            const table = document.getElementById('budget-table');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (table) table.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+        }
+
+        // Utility functions
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatCurrency(amount, currency) {
+            return window.BuyTrack?.formatCurrency(amount, currency) || `${amount} ${currency}`;
+        }
+
+        function formatNumber(num) {
+            return window.BuyTrack?.formatNumber(num) || num.toLocaleString();
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login.html';
+            }
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function showLoading() {
+            window.BuyTrack?.showLoading();
+        }
+
+        function hideLoading() {
+            window.BuyTrack?.hideLoading();
+        }
+
+        function showNotification(message, type) {
+            window.BuyTrack?.showNotification(message, type);
+        }
+
+        async function fetchAPI(endpoint, options = {}) {
+            return window.BuyTrack?.fetchAPI(endpoint, options);
+        }
+    </script>
+</body>
+</html>

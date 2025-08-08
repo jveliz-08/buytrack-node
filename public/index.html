@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Compras - Módulos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-building"></i>
+                    <h1>Sistema de Compras</h1>
+                </div>
+                <div class="header-info">
+                    <span class="user-info" id="user-info">
+                        <i class="fas fa-user"></i>
+                        <span id="user-name">Usuario</span>
+                    </span>
+                    <button class="btn-logout" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard-main">
+            <div class="dashboard-container">
+                <section class="welcome-section">
+                    <h1>Bienvenido</h1>
+                    <p>Selecciona un módulo para comenzar</p>
+                </section>
+
+                <section class="modules-section">
+                    <h2>Módulos Activos</h2>
+                    <div class="modules-grid active">
+                        <div class="module-card active" onclick="navigateTo('/control-panel')">
+                            <div class="module-icon"><i class="fas fa-gauge-high"></i></div>
+                            <div class="module-content">
+                                <h3>Panel de Control</h3>
+                                <p>Indicadores, tendencias y análisis</p>
+                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active" onclick="navigateTo('/orders')">
+                            <div class="module-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div class="module-content">
+                                <h3>Órdenes de Compra</h3>
+                                <p>Crear y gestionar órdenes</p>
+                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active" onclick="navigateTo('/suppliers')">
+                            <div class="module-icon"><i class="fas fa-building"></i></div>
+                            <div class="module-content">
+                                <h3>Proveedores</h3>
+                                <p>Administrar proveedores y productos</p>
+                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active" onclick="navigateTo('/budgets-advanced')">
+                            <div class="module-icon"><i class="fas fa-coins"></i></div>
+                            <div class="module-content">
+                                <h3>Presupuestos Avanzados</h3>
+                                <p>Control integral con análisis predictivo</p>
+                                <div class="module-status active"><i class="fas fa-check-circle"></i> Profesional</div>
+                            </div>
+                        </div>
+
+                        <div class="module-card active" onclick="navigateTo('/cost-centers-advanced')">
+                            <div class="module-icon"><i class="fas fa-diagram-project"></i></div>
+                            <div class="module-content">
+                                <h3>Centros de Costos Pro</h3>
+                                <p>Gestión avanzada con métricas e insights</p>
+                                <div class="module-status active"><i class="fas fa-check-circle"></i> Profesional</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Módulos en desarrollo (ejemplo) -->
+                <section class="modules-section">
+                    <h2>Módulos en Desarrollo</h2>
+                    <div class="modules-grid inactive">
+                        <div class="module-card inactive">
+                            <div class="module-icon"><i class="fas fa-truck"></i></div>
+                            <div class="module-content">
+                                <h3>Seguimiento de Entregas</h3>
+                                <p>Control de entregas y recepción</p>
+                                <div class="module-status inactive"><i class="fas fa-clock"></i> En Desarrollo</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        checkAuth();
+        function navigateTo(url) { window.location.href = url; }
+        function logout(){ if(confirm('¿Estás seguro de que deseas cerrar sesión?')){ localStorage.removeItem('authToken'); localStorage.removeItem('currentUser'); window.location.href='/login.html'; } }
+        (function init(){ const u = JSON.parse(localStorage.getItem('currentUser')||'{}'); const el=document.getElementById('user-name'); if(el) el.textContent = u.name || u.username || 'Usuario'; })();
+    </script>
+</body>
+</html>

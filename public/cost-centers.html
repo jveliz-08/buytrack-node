@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centros de Costos - BuyTrack</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modules.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-building"></i>
+                    <h1>Sistema de Compras</h1>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-home"></i> Inicio
+                    </a>
+                    <a href="/control-panel" class="nav-link">
+                        <i class="fas fa-chart-pie"></i> Panel de Control
+                    </a>
+                    <a href="/budgets" class="nav-link">
+                        <i class="fas fa-coins"></i> Presupuestos
+                    </a>
+                    <a href="/cost-centers" class="nav-link active">
+                        <i class="fas fa-diagram-project"></i> Centros de Costos
+                    </a>
+                    <a href="/orders" class="nav-link">
+                        <i class="fas fa-file-invoice"></i> Órdenes
+                    </a>
+                    <a href="/suppliers" class="nav-link">
+                        <i class="fas fa-building"></i> Proveedores
+                    </a>
+                    <button class="btn-logout" onclick="logout()" style="margin-left: auto;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Page Header -->
+        <section class="page-header">
+            <div class="page-header-content">
+                <div class="page-title">
+                    <h1><i class="fas fa-diagram-project"></i> Centros de Costos</h1>
+                    <p>Administra los centros de costos de la organización</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn-primary" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> Nuevo Centro
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Summary -->
+        <section class="stats-section">
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-diagram-project"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="total-centers">0</h3>
+                        <p>Centros Totales</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="active-centers">0</h3>
+                        <p>Centros Activos</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-pause-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="inactive-centers">0</h3>
+                        <p>Centros Inactivos</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="orders-this-month">0</h3>
+                        <p>Órdenes Este Mes</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters and Search -->
+        <section class="filters-section">
+            <div class="filters-content">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar centros de costo...">
+                </div>
+                <div class="filter-controls">
+                    <select id="status-filter">
+                        <option value="">Todos los Estados</option>
+                        <option value="active">Activos</option>
+                        <option value="inactive">Inactivos</option>
+                    </select>
+                    <select id="sort-select">
+                        <option value="name">Nombre</option>
+                        <option value="code">Código</option>
+                        <option value="owner">Encargado</option>
+                        <option value="created_at">Fecha de Creación</option>
+                    </select>
+                    <button class="btn-secondary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost Centers Grid -->
+        <section class="content-section">
+            <div class="content-container">
+                <div class="cost-centers-grid" id="cost-centers-grid">
+                    <!-- Los centros de costo se cargarán dinámicamente aquí -->
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <i class="fas fa-diagram-project"></i>
+                    <h3>No hay centros de costo</h3>
+                    <p>Comienza creando tu primer centro de costo</p>
+                    <button class="btn-primary" onclick="openCreateModal()">
+                        <i class="fas fa-plus"></i> Crear Centro
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal para Crear/Editar Centro -->
+        <div class="modal" id="cost-center-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Nuevo Centro de Costo</h2>
+                    <button class="modal-close" onclick="closeModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="cost-center-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="code">Código *</label>
+                            <input type="text" id="code" name="code" required 
+                                   placeholder="Ej: CC-ADM" pattern="[A-Z0-9\-]{3,10}"
+                                   title="Use códigos alfanuméricos cortos (3-10 caracteres)">
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Nombre *</label>
+                            <input type="text" id="name" name="name" required 
+                                   placeholder="Ej: Administración">
+                        </div>
+                        <div class="form-group">
+                            <label for="owner">Encargado</label>
+                            <input type="text" id="owner" name="owner" 
+                                   placeholder="Ej: Juan Pérez">
+                        </div>
+                        <div class="form-group">
+                            <label for="is_active">Estado</label>
+                            <select id="is_active" name="is_active">
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="description">Descripción</label>
+                            <textarea id="description" name="description" rows="3" 
+                                      placeholder="Descripción del centro de costo..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Variables globales
+        let costCenters = [];
+        let filteredCostCenters = [];
+        let currentCostCenter = null;
+        let editingId = null;
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            setupEventListeners();
+            loadData();
+        });
+
+        function setupEventListeners() {
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', debounce(handleSearch, 300));
+            }
+            
+            // Filter functionality
+            const statusFilter = document.getElementById('status-filter');
+            if (statusFilter) {
+                statusFilter.addEventListener('change', handleFilter);
+            }
+            
+            // Sort functionality
+            const sortSelect = document.getElementById('sort-select');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', handleSort);
+            }
+
+            // Modal functionality
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    closeModal();
+                }
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            // Form submission
+            const form = document.getElementById('cost-center-form');
+            if (form) {
+                form.addEventListener('submit', handleFormSubmit);
+            }
+        }
+
+        async function loadData() {
+            try {
+                showLoading();
+                await Promise.all([
+                    loadCostCenters(),
+                    loadStats()
+                ]);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('Error al cargar los datos', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadCostCenters() {
+            try {
+                const response = await fetchAPI('/cost-centers');
+                costCenters = response.success ? (response.data || []) : [];
+                filteredCostCenters = [...costCenters];
+                renderCostCenters();
+            } catch (error) {
+                console.error('Error loading cost centers:', error);
+                showNotification('Error al cargar los centros de costo', 'error');
+                showEmptyState();
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const total = costCenters.length;
+                const active = costCenters.filter(cc => cc.is_active).length;
+                const inactive = total - active;
+
+                // Obtener órdenes del mes actual
+                const ordersResponse = await fetchAPI('/orders');
+                const orders = ordersResponse.orders || [];
+                const currentMonth = new Date();
+                const ordersThisMonth = orders.filter(order => {
+                    const orderDate = new Date(order.order_date || order.created_at);
+                    return orderDate.getMonth() === currentMonth.getMonth() && 
+                           orderDate.getFullYear() === currentMonth.getFullYear();
+                }).length;
+
+                // Actualizar stats
+                animateValue('total-centers', 0, total, 1000);
+                animateValue('active-centers', 0, active, 1200);
+                animateValue('inactive-centers', 0, inactive, 1400);
+                animateValue('orders-this-month', 0, ordersThisMonth, 1600);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        function renderCostCenters() {
+            const grid = document.getElementById('cost-centers-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (!grid) return;
+            
+            if (filteredCostCenters.length === 0) {
+                grid.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            if (emptyState) emptyState.style.display = 'none';
+            
+            grid.innerHTML = filteredCostCenters.map(cc => createCostCenterCard(cc)).join('');
+        }
+
+        function createCostCenterCard(costCenter) {
+            const createdDate = new Date(costCenter.created_at).toLocaleDateString('es-ES');
+            const statusClass = costCenter.is_active ? 'success' : 'warning';
+            const statusText = costCenter.is_active ? 'Activo' : 'Inactivo';
+            const statusIcon = costCenter.is_active ? 'check-circle' : 'pause-circle';
+
+            return `
+                <div class="cost-center-card" data-id="${costCenter.id}">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <h3>
+                                <i class="fas fa-diagram-project"></i>
+                                ${escapeHtml(costCenter.name)}
+                            </h3>
+                            <span class="cost-center-code">${escapeHtml(costCenter.code)}</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-icon" onclick="editCostCenter(${costCenter.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon ${costCenter.is_active ? 'warning' : 'success'}" 
+                                    onclick="toggleCostCenter(${costCenter.id})" 
+                                    title="${costCenter.is_active ? 'Desactivar' : 'Activar'}">
+                                <i class="fas fa-power-off"></i>
+                            </button>
+                            <button class="btn-icon info" onclick="viewBudgets(${costCenter.id})" title="Ver Presupuestos">
+                                <i class="fas fa-coins"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="card-info">
+                            <div class="info-item">
+                                <span class="info-label">Estado:</span>
+                                <span class="status-badge ${statusClass}">
+                                    <i class="fas fa-${statusIcon}"></i>
+                                    ${statusText}
+                                </span>
+                            </div>
+                            ${costCenter.owner ? `
+                                <div class="info-item">
+                                    <span class="info-label">Encargado:</span>
+                                    <span class="info-value">
+                                        <i class="fas fa-user"></i>
+                                        ${escapeHtml(costCenter.owner)}
+                                    </span>
+                                </div>
+                            ` : ''}
+                            <div class="info-item">
+                                <span class="info-label">Creado:</span>
+                                <span class="info-value">
+                                    <i class="fas fa-calendar"></i>
+                                    ${createdDate}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        ${costCenter.description ? `
+                            <div class="card-description">
+                                <p>${escapeHtml(costCenter.description)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function showEmptyState() {
+            const grid = document.getElementById('cost-centers-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (grid) grid.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+        }
+
+        // Search and filter functions
+        function handleSearch(e) {
+            applyFilters();
+        }
+
+        function handleFilter() {
+            applyFilters();
+        }
+
+        function handleSort(e) {
+            const sortBy = e.target.value;
+            
+            filteredCostCenters.sort((a, b) => {
+                switch (sortBy) {
+                    case 'code':
+                        return a.code.localeCompare(b.code);
+                    case 'owner':
+                        return (a.owner || '').localeCompare(b.owner || '');
+                    case 'created_at':
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    case 'name':
+                    default:
+                        return a.name.localeCompare(b.name);
+                }
+            });
+            
+            renderCostCenters();
+        }
+
+        function applyFilters() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            filteredCostCenters = costCenters.filter(cc => {
+                // Search filter
+                const matchesSearch = !searchQuery || 
+                    cc.name.toLowerCase().includes(searchQuery) ||
+                    cc.code.toLowerCase().includes(searchQuery) ||
+                    (cc.owner && cc.owner.toLowerCase().includes(searchQuery)) ||
+                    (cc.description && cc.description.toLowerCase().includes(searchQuery));
+                
+                // Status filter
+                const matchesStatus = !statusFilter || 
+                    (statusFilter === 'active' && cc.is_active) ||
+                    (statusFilter === 'inactive' && !cc.is_active);
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            renderCostCenters();
+        }
+
+        function refreshData() {
+            loadData();
+            showNotification('Datos actualizados', 'success');
+        }
+
+        // Modal functions
+        function openCreateModal() {
+            editingId = null;
+            currentCostCenter = null;
+            document.getElementById('modal-title').textContent = 'Nuevo Centro de Costo';
+            document.getElementById('cost-center-form').reset();
+            showModal('cost-center-modal');
+        }
+
+        function editCostCenter(id) {
+            const costCenter = costCenters.find(cc => cc.id === id);
+            if (!costCenter) return;
+            
+            editingId = id;
+            currentCostCenter = costCenter;
+            document.getElementById('modal-title').textContent = 'Editar Centro de Costo';
+            
+            // Populate form
+            document.getElementById('code').value = costCenter.code;
+            document.getElementById('name').value = costCenter.name;
+            document.getElementById('owner').value = costCenter.owner || '';
+            document.getElementById('description').value = costCenter.description || '';
+            document.getElementById('is_active').value = costCenter.is_active ? '1' : '0';
+            
+            showModal('cost-center-modal');
+        }
+
+        function closeModal() {
+            hideModal('cost-center-modal');
+            editingId = null;
+            currentCostCenter = null;
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.is_active = parseInt(data.is_active);
+            
+            try {
+                showLoading();
+                
+                if (editingId) {
+                    await fetchAPI(`/cost-centers/${editingId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(data)
+                    });
+                    showNotification('Centro de costo actualizado exitosamente', 'success');
+                } else {
+                    await fetchAPI('/cost-centers', {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                    showNotification('Centro de costo creado exitosamente', 'success');
+                }
+                
+                closeModal();
+                loadData();
+                
+            } catch (error) {
+                console.error('Error saving cost center:', error);
+                showNotification('Error al guardar el centro de costo', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function toggleCostCenter(id) {
+            const costCenter = costCenters.find(cc => cc.id === id);
+            if (!costCenter) return;
+            
+            const action = costCenter.is_active ? 'desactivar' : 'activar';
+            if (!confirm(`¿Estás seguro de que deseas ${action} el centro "${costCenter.name}"?`)) {
+                return;
+            }
+            
+            try {
+                showLoading();
+                await fetchAPI(`/cost-centers/${id}`, { method: 'DELETE' });
+                showNotification(`Centro de costo ${action === 'desactivar' ? 'desactivado' : 'activado'} exitosamente`, 'success');
+                loadData();
+            } catch (error) {
+                console.error('Error toggling cost center:', error);
+                showNotification('Error al cambiar el estado del centro', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function viewBudgets(id) {
+            const costCenter = costCenters.find(cc => cc.id === id);
+            if (!costCenter) return;
+            
+            window.location.href = `/budgets?cost_center_id=${id}`;
+        }
+
+        // Utility functions
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function animateValue(elementId, start, end, duration) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const startTime = performance.now();
+            
+            function updateValue(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentValue = Math.round(start + (end - start) * easeOut);
+                
+                element.textContent = currentValue;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateValue);
+                }
+            }
+            
+            requestAnimationFrame(updateValue);
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUser');
+                window.location.href = '/login.html';
+            }
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        function showLoading() {
+            window.BuyTrack?.showLoading();
+        }
+
+        function hideLoading() {
+            window.BuyTrack?.hideLoading();
+        }
+
+        function showNotification(message, type) {
+            window.BuyTrack?.showNotification(message, type);
+        }
+
+        async function fetchAPI(endpoint, options = {}) {
+            return window.BuyTrack?.fetchAPI(endpoint, options);
+        }
+    </script>
+</body>
+</html>
