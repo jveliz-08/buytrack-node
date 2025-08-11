@@ -853,3 +853,98 @@ body:not(.main-page-layout) .main-container {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-light);
 }
+
+/* ============================
+   TRANSICIONES DE PÁGINA SUTILES
+   ============================ */
+
+/* Overlay de transición minimalista */
+.page-transition-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--white);
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease-in-out;
+}
+
+.page-transition-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Animaciones sutiles de entrada y salida */
+.page-enter {
+    animation: pageEnterSubtle 0.4s ease-out forwards;
+}
+
+.page-exit {
+    animation: pageExitSubtle 0.25s ease-in forwards;
+}
+
+@keyframes pageEnterSubtle {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes pageExitSubtle {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Transiciones suaves para los enlaces de navegación */
+.nav-link {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    transform: translateY(-1px);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--secondary-color);
+    transition: all 0.2s ease;
+    transform: translateX(-50%);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    width: 100%;
+}
+
+/* Efectos de hover sutiles para botones */
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-danger,
+.btn-warning {
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-success:hover,
+.btn-danger:hover,
+.btn-warning:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+}

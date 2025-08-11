@@ -2,6 +2,47 @@
 // VARIABLES GLOBALES
 // ============================
 let isLoading = false;
+let isTransitioning = false;
+
+// ============================
+// FUNCIONES DE TRANSICIÓN DE PÁGINA
+// ============================
+function createPageTransitionOverlay() {
+    if (document.getElementById('page-transition-overlay')) return;
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'page-transition-overlay';
+    overlay.className = 'page-transition-overlay';
+    // Solo un overlay simple sin contenido
+    document.body.appendChild(overlay);
+}
+
+function showPageTransition() {
+    if (isTransitioning) return;
+    
+    createPageTransitionOverlay();
+    const overlay = document.getElementById('page-transition-overlay');
+    
+    overlay.classList.add('show');
+    isTransitioning = true;
+    
+    // Agregar clase de salida al contenido actual
+    const mainContainer = document.querySelector('.main-container');
+    if (mainContainer) {
+        mainContainer.classList.add('page-exit');
+    }
+}
+
+function navigateWithTransition(url) {
+    if (isTransitioning) return;
+    
+    showPageTransition();
+    
+    // Delay reducido para transición sutil
+    setTimeout(() => {
+        window.location.href = url;
+    }, 150);
+}
 
 // ============================
 // FUNCIONES DE UTILIDAD
@@ -156,14 +197,24 @@ async function getStats() {
 // FUNCIONES DE NAVEGACIÓN
 // ============================
 function navigateToModule(module) {
-    if (isLoading) return;
+    if (isLoading || isTransitioning) return;
     
-    showLoading();
+    navigateWithTransition(`/${module}`);
+}
+
+// Función para manejar navegación de enlaces normales
+function handleLinkNavigation(event) {
+    const link = event.target.closest('a[href]');
+    if (!link || link.target === '_blank' || link.href.startsWith('mailto:') || link.href.startsWith('tel:')) {
+        return;
+    }
     
-    // Simular un pequeño delay para mostrar la transición
-    setTimeout(() => {
-        window.location.href = `/${module}`;
-    }, 500);
+    // Solo interceptar enlaces internos
+    if (link.origin === window.location.origin) {
+        event.preventDefault();
+        const url = link.getAttribute('href');
+        navigateWithTransition(url);
+    }
 }
 
 // ============================
@@ -176,7 +227,7 @@ function logout() {
 }
 
 function navigateTo(path) {
-    window.location.href = path;
+    navigateWithTransition(path);
 }
 
 // ============================
@@ -237,6 +288,24 @@ function animateValue(elementId, start, end, duration) {
 // ============================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('BuyTrack System Initialized');
+    
+    // Agregar animación de entrada a la página
+    const mainContainer = document.querySelector('.main-container');
+    if (mainContainer) {
+        mainContainer.classList.add('page-enter');
+    }
+    
+    // Interceptar navegación de enlaces
+    document.addEventListener('click', handleLinkNavigation);
+    
+    // Interceptar navegación del botón atrás/adelante del navegador
+    window.addEventListener('popstate', function(event) {
+        // Agregar transición suave al usar botones del navegador
+        showPageTransition();
+        setTimeout(() => {
+            window.location.reload();
+        }, 150);
+    });
     
     // Inicializar estadísticas
     updateStats();
@@ -366,6 +435,8 @@ window.BuyTrack = {
     showNotification,
     fetchAPI,
     navigateToModule,
+    navigateWithTransition,
+    showPageTransition,
     formatNumber,
     getCurrencySymbol,
     formatCurrency,
