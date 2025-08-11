@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/dashboard.css">
 </head>
-<body>
+<body class="main-page-layout">
     <div class="main-container">
         <!-- Header -->
         <header class="header">
@@ -45,10 +45,6 @@
                                     <i class="fas fa-history"></i>
                                     <span>Actividad Reciente</span>
                                 </button>
-                                <button class="dropdown-item" onclick="toggleTheme()">
-                                    <i class="fas fa-palette"></i>
-                                    <span>Cambiar Tema</span>
-                                </button>
                             </div>
                             <div class="dropdown-divider"></div>
                             <button class="dropdown-item logout-item" onclick="logout()">
@@ -61,78 +57,248 @@
             </div>
         </header>
 
-        <main class="dashboard-main">
-            <div class="dashboard-container">
-                <section class="welcome-section">
-                    <h1>Bienvenido</h1>
-                    <p>Selecciona un módulo para comenzar</p>
-                </section>
-
-                <section class="modules-section">
-                    <h2>Módulos Activos</h2>
-                    <div class="modules-grid active">
-                        <div class="module-card active" onclick="navigateTo('/control-panel')">
-                            <div class="module-icon"><i class="fas fa-gauge-high"></i></div>
-                            <div class="module-content">
-                                <h3>Panel de Control</h3>
-                                <p>Indicadores, tendencias y análisis</p>
-                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
-                            </div>
+        <main class="workspace">
+            <!-- Sidebar de navegación principal -->
+            <aside class="main-sidebar">
+                <div class="sidebar-header">
+                    <div class="workspace-info">
+                        <h3>Empresa</h3>
+                        <p>O&C Servicios</p>
+                    </div>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h4>Módulos Principales</h4>
+                        <div class="nav-items">
+                            <a href="/control-panel" class="nav-item">
+                                <div class="nav-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="nav-content">
+                                    <span class="nav-title">Panel de Control</span>
+                                    <span class="nav-subtitle">Métricas y análisis</span>
+                                </div>
+                                <i class="fas fa-chevron-right nav-arrow"></i>
+                            </a>
+                            
+                            <a href="/orders" class="nav-item">
+                                <div class="nav-icon">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div class="nav-content">
+                                    <span class="nav-title">Órdenes de Compra</span>
+                                    <span class="nav-subtitle">Gestión de pedidos</span>
+                                </div>
+                                <i class="fas fa-chevron-right nav-arrow"></i>
+                            </a>
+                            
+                            <a href="/suppliers" class="nav-item">
+                                <div class="nav-icon">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="nav-content">
+                                    <span class="nav-title">Proveedores</span>
+                                    <span class="nav-subtitle">Red de partners</span>
+                                </div>
+                                <i class="fas fa-chevron-right nav-arrow"></i>
+                            </a>
                         </div>
-
-                        <div class="module-card active" onclick="navigateTo('/orders')">
-                            <div class="module-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                            <div class="module-content">
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h4>Gestión Financiera</h4>
+                        <div class="nav-items">
+                            <a href="/budgets-advanced" class="nav-item">
+                                <div class="nav-icon">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="nav-content">
+                                    <span class="nav-title">Presupuestos</span>
+                                    <span class="nav-subtitle">Planificación financiera</span>
+                                </div>
+                                <i class="fas fa-chevron-right nav-arrow"></i>
+                            </a>
+                            
+                            <a href="/cost-centers-advanced" class="nav-item">
+                                <div class="nav-icon">
+                                    <i class="fas fa-sitemap"></i>
+                                </div>
+                                <div class="nav-content">
+                                    <span class="nav-title">Centros de Costos</span>
+                                    <span class="nav-subtitle">Organización de gastos</span>
+                                </div>
+                                <i class="fas fa-chevron-right nav-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h4>Configuración</h4>
+                        <div class="nav-items">
+                            <a href="#" class="nav-item" onclick="openSettings()">
+                                <div class="nav-icon">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div class="nav-content">
+                                    <span class="nav-title">Configuración</span>
+                                    <span class="nav-subtitle">Sistema y preferencias</span>
+                                </div>
+                                <i class="fas fa-chevron-right nav-arrow"></i>
+                            </a>
+                            
+                            <a href="#" class="nav-item" onclick="viewReports()">
+                                <div class="nav-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="nav-content">
+                                    <span class="nav-title">Reportes</span>
+                                    <span class="nav-subtitle">Informes y exportes</span>
+                                </div>
+                                <i class="fas fa-chevron-right nav-arrow"></i>
+                            </a>
+                        </div>
+                    </div>
+                </nav>
+                
+                <div class="sidebar-footer">
+                    <div class="user-info-card">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">José Véliz</span>
+                            <span class="user-role">Administrador</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Área de contenido principal -->
+            <main class="main-content-area">
+                <div class="content-header">
+                    <div class="header-info">
+                        <h1>Menú Principal</h1>
+                        <p></p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="action-btn secondary" onclick="viewActivity()">
+                            <i class="fas fa-bell"></i>
+                            Notificaciones
+                        </button>
+                        <button class="action-btn primary" onclick="createNewOrder()">
+                            <i class="fas fa-plus"></i>
+                            Nueva Orden
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="content-grid">
+                    <!-- Cards de acceso rápido -->
+                    <div class="quick-access-grid">
+                        <div class="access-card primary" onclick="navigateTo('/orders')">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="card-stats">
+                                    <span class="stat-number">124</span>
+                                    <span class="stat-label">Activas</span>
+                                </div>
+                            </div>
+                            <div class="card-content">
                                 <h3>Órdenes de Compra</h3>
-                                <p>Crear y gestionar órdenes</p>
-                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
+                                <p>Gestionar pedidos y solicitudes</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-text">Administrar órdenes</span>
+                                <i class="fas fa-arrow-right"></i>
                             </div>
                         </div>
-
-                        <div class="module-card active" onclick="navigateTo('/suppliers')">
-                            <div class="module-icon"><i class="fas fa-building"></i></div>
-                            <div class="module-content">
+                        
+                        <div class="access-card secondary" onclick="navigateTo('/suppliers')">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="card-stats">
+                                    <span class="stat-number">45</span>
+                                    <span class="stat-label">Activos</span>
+                                </div>
+                            </div>
+                            <div class="card-content">
                                 <h3>Proveedores</h3>
-                                <p>Administrar proveedores y productos</p>
-                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
+                                <p>Red de socios comerciales</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-text">Ver proveedores</span>
+                                <i class="fas fa-arrow-right"></i>
                             </div>
                         </div>
-
-                        <div class="module-card active" onclick="navigateTo('/budgets-advanced')">
-                            <div class="module-icon"><i class="fas fa-coins"></i></div>
-                            <div class="module-content">
-                                <h3>Gestión de Presupuestos</h3>
-                                <p>Control integral de presupuestos y costos</p>
-                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
+                        
+                        <div class="access-card tertiary" onclick="navigateTo('/budgets-advanced')">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <div class="card-stats">
+                                    <span class="stat-number">68%</span>
+                                    <span class="stat-label">Usado</span>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <h3>Presupuestos</h3>
+                                <p>Control financiero y planificación</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-text">Gestionar presupuestos</span>
+                                <i class="fas fa-arrow-right"></i>
                             </div>
                         </div>
-
-                        <div class="module-card active" onclick="navigateTo('/cost-centers-advanced')">
-                            <div class="module-icon"><i class="fas fa-diagram-project"></i></div>
-                            <div class="module-content">
-                                <h3>Centros de Costos</h3>
-                                <p>Gestión y creación de centros de costo</p>
-                                <div class="module-status active"><i class="fas fa-check-circle"></i> Activo</div>
+                        
+                        <div class="access-card quaternary" onclick="navigateTo('/control-panel')">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <div class="card-stats">
+                                    <span class="stat-number">Live</span>
+                                    <span class="stat-label">Datos</span>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <h3>Dashboard</h3>
+                                <p>Métricas y análisis en tiempo real</p>
+                            </div>
+                            <div class="card-footer">
+                                <span class="action-text">Ver dashboard</span>
+                                <i class="fas fa-arrow-right"></i>
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <!-- Módulos en desarrollo (ejemplo) -->
-                <section class="modules-section">
-                    <h2>Módulos en Desarrollo</h2>
-                    <div class="modules-grid inactive">
-                        <div class="module-card inactive">
-                            <div class="module-icon"><i class="fas fa-truck"></i></div>
-                            <div class="module-content">
-                                <h3>Seguimiento de Entregas</h3>
-                                <p>Control de entregas y recepción</p>
-                                <div class="module-status inactive"><i class="fas fa-clock"></i> En Desarrollo</div>
+                    
+                    <!-- Área de información adicional -->
+                    <div class="info-section">
+                        <div class="info-card">
+                            <h4>Accesos Frecuentes</h4>
+                            <div class="frequent-actions">
+                                <button class="frequent-btn" onclick="navigateTo('/orders')">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Nueva Orden
+                                </button>
+                                <button class="frequent-btn" onclick="navigateTo('/suppliers')">
+                                    <i class="fas fa-user-plus"></i>
+                                    Agregar Proveedor
+                                </button>
+                                <button class="frequent-btn" onclick="navigateTo('/control-panel')">
+                                    <i class="fas fa-chart-bar"></i>
+                                    Ver Reportes
+                                </button>
                             </div>
                         </div>
                     </div>
-                </section>
-            </div>
+                </div>
+            </main>
         </main>
     </div>
 
@@ -151,6 +317,39 @@
                 window.location.href='/login.html'; 
             } 
         }
+
+        // Funciones del workspace
+        function viewActivity() {
+            alert('Mostrando actividad reciente del sistema...');
+        }
+
+        function openProfileSettings() {
+            alert('Abriendo configuración de perfil...');
+        }
+
+        function openSettings() {
+            alert('Accediendo a configuración del sistema...');
+        }
+
+        function viewReports() {
+            alert('Cargando centro de reportes...');
+        }
+
+        function createNewOrder() {
+            navigateTo('/orders');
+        }
+
+        // Inicializar workspace
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar información del usuario
+            const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            const userName = user.name || user.username || 'José Véliz';
+            document.querySelector('.user-name').textContent = userName;
+            
+            // Actualizar nombre en dropdown también
+            document.getElementById('user-name').textContent = userName.split(' ')[0];
+            document.getElementById('dropdown-user-name').textContent = userName;
+        });
     </script>
 </body>
 </html>

@@ -34,11 +34,16 @@ body {
     background-color: var(--background-color);
 }
 
+/* Main container - comportamiento básico para todos los módulos */
 .main-container {
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     background: var(--background-color);
+}
+
+/* Para módulos normales (no página principal): permitir altura natural */
+body:not(.main-page-layout) .main-container {
+    min-height: 100vh;
 }
 
 /* ============================

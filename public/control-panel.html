@@ -37,14 +37,40 @@
                 </a>
             </nav>
             <div class="header-actions">
-                <div class="user-info" id="user-info">
-                    <i class="fas fa-user"></i>
-                    <span id="user-name">Usuario</span>
+                <div class="user-dropdown">
+                    <button class="user-info" id="user-info" onclick="toggleUserDropdown()">
+                        <i class="fas fa-user"></i>
+                        <span id="user-name">Usuario</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="user-dropdown-menu" id="user-dropdown-menu">
+                        <div class="user-profile-section">
+                            <div class="user-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="user-details">
+                                <h4 id="dropdown-user-name">Usuario</h4>
+                                <p id="dropdown-user-email">jose.veliz@oycservicios.cl</p>
+                                <span class="user-role" id="dropdown-user-role">Administrador</span>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-options">                                <button class="dropdown-item" onclick="openProfileSettings()">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Configuración</span>
+                                </button>
+                                <button class="dropdown-item" onclick="viewActivity()">
+                                    <i class="fas fa-history"></i>
+                                    <span>Actividad Reciente</span>
+                                </button>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-item" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Cerrar Sesión</span>
+                        </button>
+                    </div>
                 </div>
-                <button class="btn-logout" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Salir</span>
-                </button>
             </div>
         </div>
     </header>
@@ -205,6 +231,26 @@
     function drawStatusDistChart(statusCounts){ const labels=Object.keys(statusCounts||{}); const counts=labels.map(k=>statusCounts[k]||0); const display=labels.map(getStatusText); const colors=labels.map(getStatusColor); const ctx=document.getElementById('statusDistChart').getContext('2d'); if(window.statusDistChart) window.statusDistChart.destroy(); window.statusDistChart=new Chart(ctx,{ type:'doughnut', data:{ labels: display, datasets:[{ data: counts, backgroundColor: colors, borderWidth:1, hoverOffset:8 }]}, options:{ plugins:{ legend:{ position:'bottom' }}}}); }
 
     (function init(){ const user = JSON.parse(localStorage.getItem('currentUser')||'{}'); document.getElementById('user-name').textContent = user.name || user.username || 'Usuario'; loadDashboardStats(); })();
+
+    // Funciones adicionales del dropdown para este módulo
+    function openProfileSettings() {
+        alert('Abriendo configuración de perfil...');
+    }
+
+    function viewActivity() {
+        alert('Redirigiendo a actividad completa...');
+    }
+
+    function toggleTheme() {
+        // Función deshabilitada temporalmente
+        alert('Funcionalidad de tema no disponible en esta versión');
+    }
+
+    // Sin funcionalidad de tema por ahora
+    document.addEventListener('DOMContentLoaded', function() {
+        // No theme functionality
+    });
 </script>
+<script src="js/user-dropdown.js"></script>
 </body>
 </html>

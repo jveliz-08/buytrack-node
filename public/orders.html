@@ -6,6 +6,7 @@
     <title>Órdenes de Compra - Gestión de Compras</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/orders.css">
 </head>
 <body>
@@ -38,14 +39,41 @@
                     </a>
                 </nav>
                 <div class="header-actions">
-                    <div class="user-info">
-                        <i class="fas fa-user"></i>
-                        <span id="user-name">Usuario</span>
+                    <div class="user-dropdown">
+                        <button class="user-info" id="user-info" onclick="toggleUserDropdown()">
+                            <i class="fas fa-user"></i>
+                            <span id="user-name">Usuario</span>
+                            <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </button>
+                        <div class="user-dropdown-menu" id="user-dropdown-menu">
+                            <div class="user-profile-section">
+                                <div class="user-avatar">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <div class="user-details">
+                                    <h4 id="dropdown-user-name">Usuario</h4>
+                                    <p id="dropdown-user-email">jose.veliz@oycservicios.cl</p>
+                                    <span class="user-role" id="dropdown-user-role">Administrador</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-options">
+                                <button class="dropdown-item" onclick="openProfileSettings()">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Configuración</span>
+                                </button>
+                                <button class="dropdown-item" onclick="viewActivity()">
+                                    <i class="fas fa-history"></i>
+                                    <span>Actividad Reciente</span>
+                                </button>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item logout-item" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Cerrar Sesión</span>
+                            </button>
+                        </div>
                     </div>
-                    <button class="btn-logout" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Salir</span>
-                    </button>
                 </div>
             </div>
         </header>
@@ -284,6 +312,26 @@
         if (!checkAuth()) {
             // Si no está autenticado, redirigir inmediatamente
         }
+
+        // Funciones adicionales del dropdown para este módulo
+        function openProfileSettings() {
+            alert('Abriendo configuración de perfil...');
+        }
+
+        function viewActivity() {
+            alert('Redirigiendo a actividad completa...');
+        }
+
+        function toggleTheme() {
+            // Función deshabilitada temporalmente
+            alert('Funcionalidad de tema no disponible en esta versión');
+        }
+
+        // Aplicar tema guardado al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sin tema oscuro por ahora
+        });
     </script>
+    <script src="js/user-dropdown.js"></script>
 </body>
 </html>
